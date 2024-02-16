@@ -17,7 +17,7 @@ class MyApp extends StatelessWidget {
         initialRoute: '/',
         title: 'DriveCamfy',
         theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+          colorScheme: ColorScheme.fromSeed(seedColor: Colors.grey),
           useMaterial3: true,
         ),
         routes: {
