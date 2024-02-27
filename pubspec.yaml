@@ -39,6 +39,11 @@ dependencies:
   camera: ^0.10.5+9
   path_provider: ^2.1.2
   path: ^1.8.3
+  clippy_flutter: ^2.0.0-nullsafety.1
+  image_picker: ^1.0.7
+  device_info_plus: ^9.1.2
+  permission_handler: ^11.0.1
+  intl: ^0.19.0
 
 dev_dependencies:
   flutter_test:

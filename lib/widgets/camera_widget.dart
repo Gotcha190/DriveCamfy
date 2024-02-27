@@ -1,9 +1,12 @@
-import 'package:drive_camfy/widgets/camera_button_widgets.dart';
+import 'dart:io';
+
+import 'package:drive_camfy/widgets/camera_control_buttons_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 
 class CameraWidget extends StatefulWidget {
-  const CameraWidget({Key? key}) : super(key: key);
+  final Directory saveDir;
+  const CameraWidget({Key? key, required this.saveDir}) : super(key: key);
 
   @override
   _CameraWidgetState createState() => _CameraWidgetState();
@@ -56,7 +59,8 @@ class _CameraWidgetState extends State<CameraWidget> {
               alignment: AlignmentDirectional.bottomCenter,
               children: [
                 CameraPreview(_controller),
-                const CameraButtonsWidget(),
+                CameraControlButtonsWidget(
+                    controller: _controller, saveDir: widget.saveDir),
               ],
             );
           } else {
