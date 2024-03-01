@@ -1,59 +1,20 @@
 import 'dart:io';
-import 'package:device_info_plus/device_info_plus.dart';
+import 'package:drive_camfy/utils/app_directory.dart';
 import 'package:drive_camfy/views/fullscreen_image_view.dart';
+import 'package:drive_camfy/views/fullscreen_video_view.dart';
 import 'package:drive_camfy/views/gallery_view.dart';
 import 'package:drive_camfy/views/homepage.dart';
 import 'package:flutter/material.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:sizer/sizer.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  Directory saveDir = await getDirectory();
-  runApp(MyApp(saveDir: saveDir));
-}
-
-Future<Directory> getDirectory() async {
-  Directory? exportDir;
-  if (Platform.isAndroid &&
-      (await DeviceInfoPlugin().androidInfo).version.sdkInt <= 29) {
-    while (await Permission.storage.isDenied) {
-      await Permission.storage.request();
-    }
-  }
-  if (Platform.isAndroid) {
-    exportDir = Directory('/storage/emulated/0/Documents');
-    try {
-      exportDir.existsSync();
-    } catch (e) {
-      exportDir = null;
-    }
-  }
-  if (exportDir == null) {
-    if (Platform.isAndroid) {
-      exportDir = await getExternalStorageDirectory();
-    } else if (Platform.isIOS) {
-      exportDir = await getApplicationDocumentsDirectory();
-    } else {
-      exportDir = await getDownloadsDirectory();
-    }
-  }
-  exportDir =
-      exportDir != null ? Directory('${exportDir.path}/DriveCamfy') : null;
-  exportDir?.createSync(recursive: true);
-
-  if (exportDir != null) {
-    Directory('${exportDir.path}/images').createSync(recursive: true);
-    Directory('${exportDir.path}/videos').createSync(recursive: true);
-  }
-
-  return exportDir!;
+  await AppDirectory().init();
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  final Directory saveDir;
-  const MyApp({super.key, required this.saveDir});
+  const MyApp({super.key});
   @override
   Widget build(BuildContext context) {
     return Sizer(builder: (context, orientation, deviceType) {
@@ -69,9 +30,8 @@ class MyApp extends StatelessWidget {
           switch (settings.name) {
             case '/':
               return MaterialPageRoute(
-                  builder: (context) => HomePage(
-                        saveDir: saveDir,
-                      ));
+                  builder: (context) => const HomePage()
+              );
             case '/gallery':
               final Map<String, List<File>>? arguments =
                   settings.arguments as Map<String, List<File>>?;
@@ -85,6 +45,11 @@ class MyApp extends StatelessWidget {
               final File? image = settings.arguments as File?;
               return MaterialPageRoute(
                 builder: (context) => FullscreenImageView(image: image!),
+              );
+            case '/fullscreenVideo':
+              final File? video = settings.arguments as File?;
+              return MaterialPageRoute(
+                builder: (context) => FullscreenVideoView(image: video!),
               );
             default:
 
