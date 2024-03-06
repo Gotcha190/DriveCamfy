@@ -12,25 +12,35 @@ class VideoButton extends StatefulWidget {
 }
 
 class _VideoButtonState extends State<VideoButton> {
-  late VideoRecorder videoRecorder;
+  late VideoRecorder _videoRecorder;
+  late CameraController _controller;
+  bool _isRecording = false;
 
   @override
   void initState() {
     super.initState();
-    videoRecorder = VideoRecorder();
+    _videoRecorder = VideoRecorder();
+    _controller = CameraWidget.of(context)!;
+    _videoRecorder.setup(_controller);
   }
 
   @override
   Widget build(BuildContext context) {
-    final CameraController controller = CameraWidget.of(context)!;
     return ElevatedButton(
-      onPressed: controller.value.isRecordingVideo
-          ? () => videoRecorder.stopRecording(false)
-          : SettingsManager.recordMins > 0 && SettingsManager.recordCount >= 0
-              ? () {
-                  videoRecorder.recordRecursively();
-                }
-              : null,
+      onPressed: () {
+        if (_controller.value.isRecordingVideo) {
+          _videoRecorder.stopRecording(false);
+          setState(() {
+            _isRecording = false;
+          });
+        } else if (SettingsManager.recordMins > 0 &&
+            SettingsManager.recordCount >= 0) {
+          _videoRecorder.recordRecursively();
+          setState(() {
+            _isRecording = true;
+          });
+        }
+      },
       style: ElevatedButton.styleFrom(
         shape: const CircleBorder(),
         padding: const EdgeInsets.all(30),
@@ -38,7 +48,7 @@ class _VideoButtonState extends State<VideoButton> {
       ),
       child: Icon(
         Icons.circle,
-        color: controller.value.isRecordingVideo ? Colors.red : Colors.black,
+        color: _isRecording ? Colors.red : Colors.black,
       ),
     );
   }
