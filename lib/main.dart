@@ -49,7 +49,7 @@ class MyApp extends StatelessWidget {
             case '/fullscreenVideo':
               final File? video = settings.arguments as File?;
               return MaterialPageRoute(
-                builder: (context) => FullscreenVideoView(image: video!),
+                builder: (context) => FullscreenVideoView(video: video!),
               );
             default:
 
