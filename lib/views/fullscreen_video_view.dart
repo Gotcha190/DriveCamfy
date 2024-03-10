@@ -6,8 +6,13 @@ import 'package:drive_camfy/widgets/video_player_widget.dart';
 
 class FullscreenVideoView extends StatefulWidget {
   final File video;
+  final Function() onDelete;
 
-  const FullscreenVideoView({super.key, required this.video});
+  const FullscreenVideoView({
+    super.key,
+    required this.video,
+    required this.onDelete,
+  });
 
   @override
   State<FullscreenVideoView> createState() => _FullscreenVideoViewState();
@@ -34,7 +39,10 @@ class _FullscreenVideoViewState extends State<FullscreenVideoView> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Expanded(
-            child: VideoPlayerWidget(key: _videoPlayerKey, video: widget.video),
+            child: VideoPlayerWidget(
+              key: _videoPlayerKey,
+              video: widget.video,
+            ),
           ),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -68,7 +76,10 @@ class _FullscreenVideoViewState extends State<FullscreenVideoView> {
                 icon: const Icon(Icons.forward_10),
                 iconSize: 40,
               ),
-              OptionsPopupMenuButton(video: widget.video),
+              OptionsPopupMenuButton(
+                video: widget.video,
+                onDelete: widget.onDelete,
+              ),
             ],
           ),
         ],

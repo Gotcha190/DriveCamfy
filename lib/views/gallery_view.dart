@@ -1,19 +1,55 @@
 import 'dart:io';
 import 'dart:typed_data';
+import 'package:drive_camfy/utils/media_tools/gallery_helper.dart';
 import 'package:drive_camfy/utils/media_tools/thumbnail_generator.dart';
 import 'package:flutter/material.dart';
 import 'package:visibility_detector/visibility_detector.dart';
 
-class GalleryView extends StatelessWidget {
-  final List<File> images;
-  final List<File> videos;
+class GalleryView extends StatefulWidget {
+  const GalleryView({super.key});
 
-  const GalleryView({super.key, required this.images, required this.videos});
+  @override
+  State<GalleryView> createState() => _GalleryViewState();
+}
+
+class _GalleryViewState extends State<GalleryView> {
+  late List<File> images = [];
+  late List<File> videos = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadFiles();
+  }
+
+  void _onDelete() {
+    _loadFiles();
+  }
+
+  Future<void> _loadFiles() async {
+    images = await GalleryHelper.getImages();
+    videos = await GalleryHelper.getVideos();
+    setState(() {});
+  }
+
+  Future<List<File>> getImages() async {
+    return await GalleryHelper.getImages();
+  }
+
+  Future<List<File>> getVideos() async {
+    return await GalleryHelper.getVideos();
+  }
 
   Future<void> _openFullScreen(BuildContext context, File file) async {
     String routeName =
         images.contains(file) ? '/fullscreenImage' : '/fullscreenVideo';
-    await Navigator.of(context).pushNamed(routeName, arguments: file);
+    await Navigator.of(context).pushNamed(
+      routeName,
+      arguments: {
+        'file': file,
+        'onDelete': _onDelete,
+      },
+    );
   }
 
   @override

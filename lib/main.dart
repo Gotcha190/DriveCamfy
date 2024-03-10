@@ -30,26 +30,32 @@ class MyApp extends StatelessWidget {
           switch (settings.name) {
             case '/':
               return MaterialPageRoute(
-                  builder: (context) => const HomePage()
+                builder: (context) => const HomePage(),
               );
             case '/gallery':
-              final Map<String, List<File>>? arguments =
-                  settings.arguments as Map<String, List<File>>?;
-              final List<File> images = arguments?['images'] ?? [];
-              final List<File> videos = arguments?['videos'] ?? [];
               return MaterialPageRoute(
-                builder: (context) =>
-                    GalleryView(images: images, videos: videos),
+                builder: (context) => const GalleryView(),
               );
             case '/fullscreenImage':
-              final File? image = settings.arguments as File?;
+              final Map<String, dynamic> arguments =
+                  settings.arguments as Map<String, dynamic>;
+              final File? image = arguments['file'] as File?;
+
+              ///TODO: Add delete functionality
+              final Function() onDelete = arguments['onDelete'] as Function();
               return MaterialPageRoute(
                 builder: (context) => FullscreenImageView(image: image!),
               );
             case '/fullscreenVideo':
-              final File? video = settings.arguments as File?;
+              final Map<String, dynamic> arguments =
+                  settings.arguments as Map<String, dynamic>;
+              final File? video = arguments['file'] as File?;
+              final Function() onDelete = arguments['onDelete'] as Function();
               return MaterialPageRoute(
-                builder: (context) => FullscreenVideoView(video: video!),
+                builder: (context) => FullscreenVideoView(
+                  video: video!,
+                  onDelete: onDelete,
+                ),
               );
             default:
 
