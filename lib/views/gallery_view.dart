@@ -32,14 +32,6 @@ class _GalleryViewState extends State<GalleryView> {
     setState(() {});
   }
 
-  Future<List<File>> getImages() async {
-    return await GalleryHelper.getImages();
-  }
-
-  Future<List<File>> getVideos() async {
-    return await GalleryHelper.getVideos();
-  }
-
   Future<void> _openFullScreen(BuildContext context, File file) async {
     String routeName =
         images.contains(file) ? '/fullscreenImage' : '/fullscreenVideo';

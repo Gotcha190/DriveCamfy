@@ -44,7 +44,10 @@ class MyApp extends StatelessWidget {
               ///TODO: Add delete functionality
               final Function() onDelete = arguments['onDelete'] as Function();
               return MaterialPageRoute(
-                builder: (context) => FullscreenImageView(image: image!),
+                builder: (context) => FullscreenImageView(
+                  image: image!,
+                  onDelete: onDelete,
+                ),
               );
             case '/fullscreenVideo':
               final Map<String, dynamic> arguments =

@@ -3,12 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:drive_camfy/utils/media_tools/media_options_handler.dart';
 
 class OptionsPopupMenuButton extends StatelessWidget {
-  final File video;
+  final File file;
   final Function() onDelete;
 
   const OptionsPopupMenuButton({
     super.key,
-    required this.video,
+    required this.file,
     required this.onDelete,
   });
 
@@ -20,7 +20,7 @@ class OptionsPopupMenuButton extends StatelessWidget {
       onSelected: (String result) {
         MediaOptionsHandler.handleOption(
           result,
-          video,
+          file,
           context,
           onDelete,
         );

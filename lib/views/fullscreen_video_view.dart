@@ -77,7 +77,7 @@ class _FullscreenVideoViewState extends State<FullscreenVideoView> {
                 iconSize: 40,
               ),
               OptionsPopupMenuButton(
-                video: widget.video,
+                file: widget.video,
                 onDelete: widget.onDelete,
               ),
             ],

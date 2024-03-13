@@ -4,14 +4,14 @@ import 'package:flutter/material.dart';
 class MediaOptionsHandler {
   static void handleOption(
     String option,
-    File video,
+    File file,
     BuildContext context,
     Function() onVideoDeleted,
   ) {
     switch (option) {
       case 'delete':
-        _deleteVideo(
-          video,
+        _delete(
+          file,
           context,
           onVideoDeleted,
         );
@@ -22,8 +22,8 @@ class MediaOptionsHandler {
     }
   }
 
-  static void _deleteVideo(
-    File video,
+  static void _delete(
+    File file,
     BuildContext context,
     Function() onDelete,
   ) {
@@ -32,7 +32,7 @@ class MediaOptionsHandler {
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text("Delete"),
-          content: const Text("Are you sure you want to delete this video?"),
+          content: Text("Are you sure you want to delete this ${file.path.endsWith('.jpg') ? 'photo' : 'video'}?"),
           actions: [
             TextButton(
               onPressed: () {
@@ -42,12 +42,12 @@ class MediaOptionsHandler {
             ),
             TextButton(
               onPressed: () {
-                video.deleteSync();
+                file.deleteSync();
                 Navigator.of(context).pop();
                 onDelete();
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
-                    content: Text("Video deleted"),
+                    content: Text("File deleted"),
                   ),
                 );
                 Navigator.pop(context);
