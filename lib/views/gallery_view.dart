@@ -38,7 +38,8 @@ class _GalleryViewState extends State<GalleryView> {
     await Navigator.of(context).pushNamed(
       routeName,
       arguments: {
-        'file': file,
+        'file': images.contains(file) ? images : videos,
+        'index': images.contains(file) ? images.indexOf(file) : videos.indexOf(file),
         'onDelete': _onDelete,
       },
     );

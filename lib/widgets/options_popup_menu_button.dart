@@ -40,8 +40,10 @@ class OptionsPopupMenuButton extends StatelessWidget {
         ),
         const PopupMenuItem<String>(
           value: 'delete',
-          textStyle: TextStyle(color: Colors.red),
-          child: Text('Delete video'),
+          child: Text(
+            'Delete',
+            style: TextStyle(color: Colors.red),
+          ),
         ),
       ],
     );

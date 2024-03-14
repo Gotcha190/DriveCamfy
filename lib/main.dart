@@ -39,24 +39,26 @@ class MyApp extends StatelessWidget {
             case '/fullscreenImage':
               final Map<String, dynamic> arguments =
                   settings.arguments as Map<String, dynamic>;
-              final File? image = arguments['file'] as File?;
-
-              ///TODO: Add delete functionality
+              final List<File>? images = arguments['file'] as List<File>?;
+              final int index = arguments['index'];
               final Function() onDelete = arguments['onDelete'] as Function();
               return MaterialPageRoute(
                 builder: (context) => FullscreenImageView(
-                  image: image!,
+                  images: images!,
+                  imgIndex: index,
                   onDelete: onDelete,
                 ),
               );
             case '/fullscreenVideo':
               final Map<String, dynamic> arguments =
                   settings.arguments as Map<String, dynamic>;
-              final File? video = arguments['file'] as File?;
+              final List<File>? videos = arguments['file'] as List<File>?;
+              final int index = arguments['index'];
               final Function() onDelete = arguments['onDelete'] as Function();
               return MaterialPageRoute(
                 builder: (context) => FullscreenVideoView(
-                  video: video!,
+                  videos: videos!,
+                  vidIndex: index,
                   onDelete: onDelete,
                 ),
               );
