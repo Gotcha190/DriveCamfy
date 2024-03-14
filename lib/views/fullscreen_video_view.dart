@@ -62,6 +62,14 @@ class _FullscreenVideoViewState extends State<FullscreenVideoView> {
               return VideoPlayerWidget(
                 key: _videoPlayerKeys[index],
                 video: widget.videos[index],
+                onVideoEnd: () {
+                  setState(() {
+                    _isPlaying = false; // Update isPlaying state
+                    _videoPlayerKeys[_currentIndex]
+                        .currentState
+                        ?.rewindToBeginningAndPause();
+                  });
+                },
               );
             },
           ),
@@ -79,7 +87,7 @@ class _FullscreenVideoViewState extends State<FullscreenVideoView> {
                     onPressed: () {
                       _videoPlayerKeys[_currentIndex]
                           .currentState
-                          ?.rewind(const Duration(seconds: 10));
+                          ?.rewind10sec(const Duration(seconds: 10));
                     },
                     icon: const Icon(Icons.replay_10),
                     iconSize: 40,
@@ -102,7 +110,7 @@ class _FullscreenVideoViewState extends State<FullscreenVideoView> {
                     onPressed: () {
                       _videoPlayerKeys[_currentIndex]
                           .currentState
-                          ?.fastForward(const Duration(seconds: 10));
+                          ?.fastForward10sec(const Duration(seconds: 10));
                     },
                     icon: const Icon(Icons.forward_10),
                     iconSize: 40,
