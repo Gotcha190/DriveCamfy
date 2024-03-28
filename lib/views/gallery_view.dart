@@ -39,7 +39,8 @@ class _GalleryViewState extends State<GalleryView> {
       routeName,
       arguments: {
         'file': images.contains(file) ? images : videos,
-        'index': images.contains(file) ? images.indexOf(file) : videos.indexOf(file),
+        'index':
+            images.contains(file) ? images.indexOf(file) : videos.indexOf(file),
         'onDelete': _onDelete,
       },
     );
@@ -61,8 +62,22 @@ class _GalleryViewState extends State<GalleryView> {
         ),
         body: TabBarView(
           children: [
-            _buildGridView(context, videos),
-            _buildGridView(context, images),
+            videos.isEmpty
+                ? const Center(
+                    child: Text(
+                      "No video created yet",
+                      style: TextStyle(fontSize: 18),
+                    ),
+                  )
+                : _buildGridView(context, videos),
+            images.isEmpty
+                ? const Center(
+                    child: Text(
+                      "No photo created yet",
+                      style: TextStyle(fontSize: 18),
+                    ),
+                  )
+                : _buildGridView(context, images),
           ],
         ),
       ),

@@ -8,15 +8,16 @@ import 'package:intl/intl.dart';
 class VideoRecorder {
   late CameraController controller;
   late DateTime currentClipStart;
+  late int recordMins = 0;
+  late int recordCount = 0;
 
   void setup(CameraController cameraController) {
     controller = cameraController;
+    recordMins = SettingsManager.recordMins;
+    recordCount = SettingsManager.recordCount;
   }
 
   Future<void> recordRecursively() async {
-    final recordMins = SettingsManager.recordMins;
-    final recordCount = SettingsManager.recordCount;
-
     if (recordMins > 0 && recordCount >= 0) {
       await controller.startVideoRecording();
       currentClipStart = DateTime.now();
@@ -44,13 +45,16 @@ class VideoRecorder {
   }
 
   Future<void> deleteOldRecordings() async {
-    final recordCount = SettingsManager.recordCount;
-
     List<File>? existingClips = await GalleryHelper.getVideos();
     if (existingClips.length > recordCount) {
-      await Future.wait(existingClips.sublist(recordCount).map((eC) {
-        return eC.delete();
-      }));
+      // Sort existing clips by creation date
+      existingClips
+          .sort((a, b) => a.lastModifiedSync().compareTo(b.lastModifiedSync()));
+
+      // Delete the oldest recordings beyond the record count
+      for (int i = 0; i < existingClips.length - recordCount; i++) {
+        await existingClips[i].delete();
+      }
     }
   }
 }
