@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:drive_camfy/utils/media_tools/gallery_helper.dart';
 import 'package:flutter/material.dart';
 
 class MediaOptionsHandler {
@@ -32,7 +33,8 @@ class MediaOptionsHandler {
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text("Delete"),
-          content: Text("Are you sure you want to delete this ${file.path.endsWith('.jpg') ? 'photo' : 'video'}?"),
+          content: Text(
+              "Are you sure you want to delete this ${file.path.endsWith('.jpg') ? 'photo' : 'video'}?"),
           actions: [
             TextButton(
               onPressed: () {
@@ -42,7 +44,9 @@ class MediaOptionsHandler {
             ),
             TextButton(
               onPressed: () {
-                file.deleteSync();
+                file.path.endsWith('.jpg')
+                    ? file.deleteSync()
+                    : GalleryHelper.deleteVideo(file);
                 Navigator.of(context).pop();
                 onDelete();
                 ScaffoldMessenger.of(context).showSnackBar(

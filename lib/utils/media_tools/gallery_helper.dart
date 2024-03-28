@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:path/path.dart' as path;
 import 'package:drive_camfy/utils/app_directory.dart';
 
 class GalleryHelper {
@@ -36,5 +37,24 @@ class GalleryHelper {
       print('Błąd podczas odczytu katalogu filmów: $e');
     }
     return videos;
+  }
+
+  static Future<void> deleteVideo(File video) async {
+    try {
+      final String videoName = path.basenameWithoutExtension(video.path);
+
+      // Delete video
+      await video.delete();
+
+      // Check if thumbnail exist
+      final File thumbnailFile =
+          File('${AppDirectory().thumbnails}/$videoName.jpg');
+      if (await thumbnailFile.exists()) {
+        // Delete thumbnail
+        await thumbnailFile.delete();
+      }
+    } catch (e) {
+      print('Błąd podczas usuwania filmu: $e');
+    }
   }
 }
