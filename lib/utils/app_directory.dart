@@ -45,6 +45,7 @@ class AppDirectory {
     await Directory('${exportDir.path}/images').create(recursive: true);
     await Directory('${exportDir.path}/videos').create(recursive: true);
     await Directory('${exportDir.path}/thumbnails').create(recursive: true);
+    await Directory('${exportDir.path}/emergency').create(recursive: true);
 
     return exportDir;
   }
@@ -52,4 +53,5 @@ class AppDirectory {
   String get images => path.join(_saveDir.path, 'images');
   String get videos => path.join(_saveDir.path, 'videos');
   String get thumbnails => path.join(_saveDir.path, 'thumbnails');
+  String get emergency => path.join(_saveDir.path, 'emergency');
 }

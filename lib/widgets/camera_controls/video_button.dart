@@ -41,6 +41,11 @@ class _VideoButtonState extends State<VideoButton> {
           });
         }
       },
+      onLongPress: () {
+        if (SettingsManager.recordMins > 0 && SettingsManager.recordCount >= 0) {
+          _videoRecorder.startEmergencyRecording();
+        }
+      },
       style: ElevatedButton.styleFrom(
         shape: const CircleBorder(),
         padding: const EdgeInsets.all(30),
