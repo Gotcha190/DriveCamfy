@@ -39,6 +39,24 @@ class GalleryHelper {
     return videos;
   }
 
+  static Future<List<File>> getEmergency() async {
+    final List<File> emergency = [];
+
+    try {
+      final Directory emergencyDirectory = Directory(AppDirectory().emergency);
+      if (await emergencyDirectory.exists()) {
+        emergency.addAll(await emergencyDirectory
+            .list()
+            .where((entity) => entity is File && entity.lengthSync() > 0)
+            .map<File>((entity) => File(entity.path))
+            .toList());
+      }
+    } catch (e) {
+      print('Błąd podczas odczytu katalogu filmów: $e');
+    }
+    return emergency;
+  }
+
   static Future<void> deleteVideo(File video) async {
     try {
       final String videoName = path.basenameWithoutExtension(video.path);

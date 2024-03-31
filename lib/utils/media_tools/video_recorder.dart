@@ -66,7 +66,7 @@ class VideoRecorder {
       String formattedDate =
           DateFormat('yyyy-MM-dd_HH-mm-ss').format(_emergencyClipStart);
       final String videoPath =
-          '${AppDirectory().emergency}/video_$formattedDate.mp4';
+          '${AppDirectory().emergency}/EMERGENCY_$formattedDate.mp4';
       await tempFile.saveTo(videoPath);
       File(tempFile.path).delete();
     }

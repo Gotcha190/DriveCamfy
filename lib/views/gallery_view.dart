@@ -15,6 +15,7 @@ class GalleryView extends StatefulWidget {
 class _GalleryViewState extends State<GalleryView> {
   late List<File> images = [];
   late List<File> videos = [];
+  late List<File> emergency = [];
 
   @override
   void initState() {
@@ -22,26 +23,28 @@ class _GalleryViewState extends State<GalleryView> {
     _loadFiles();
   }
 
-  void _onDelete() {
-    _loadFiles();
-  }
-
   Future<void> _loadFiles() async {
     images = await GalleryHelper.getImages();
     videos = await GalleryHelper.getVideos();
+    emergency = await GalleryHelper.getEmergency();
     setState(() {});
   }
 
   Future<void> _openFullScreen(BuildContext context, File file) async {
     String routeName =
         images.contains(file) ? '/fullscreenImage' : '/fullscreenVideo';
+    List<File> whichFile = images.contains(file)
+        ? images
+        : emergency.contains(file)
+            ? emergency
+            : videos;
+    int index = whichFile.indexOf(file);
     await Navigator.of(context).pushNamed(
       routeName,
       arguments: {
-        'file': images.contains(file) ? images : videos,
-        'index':
-            images.contains(file) ? images.indexOf(file) : videos.indexOf(file),
-        'onDelete': _onDelete,
+        'file': whichFile,
+        'index': index,
+        'onDelete': _loadFiles,
       },
     );
   }
@@ -49,13 +52,19 @@ class _GalleryViewState extends State<GalleryView> {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 2,
+      length: 3,
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Gallery'),
           bottom: const TabBar(
             tabs: [
               Tab(text: 'Videos'),
+              Tab(
+                child: Text(
+                  'Emergency',
+                  style: TextStyle(color: Colors.red),
+                ),
+              ),
               Tab(text: 'Pictures'),
             ],
           ),
@@ -70,6 +79,14 @@ class _GalleryViewState extends State<GalleryView> {
                     ),
                   )
                 : _buildGridView(context, videos),
+            emergency.isEmpty
+                ? const Center(
+                    child: Text(
+                      "No emergency video created yet",
+                      style: TextStyle(fontSize: 18),
+                    ),
+                  )
+                : _buildGridView(context, emergency),
             images.isEmpty
                 ? const Center(
                     child: Text(

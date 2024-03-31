@@ -26,13 +26,12 @@ class ThumbnailsGenerator {
 
   static Future<Uint8List?> _generateThumbnail(File file) async {
     try {
-      print("generating!!!");
       final thumbnail = await VideoThumbnail.thumbnailData(
         video: file.path,
         imageFormat: ImageFormat.JPEG,
         quality: 95,
-        maxHeight: 100,
-        maxWidth: 100,
+        maxHeight: 150,
+        maxWidth: 150,
       );
 
       // Save thumbnail to thumbnails directory
