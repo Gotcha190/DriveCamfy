@@ -32,7 +32,6 @@ class VideoRecorder {
   }
 
   Future<void> startEmergencyRecording() async {
-    print("START EMERGENCY RECORDING!!!");
     _isEmergencyRecording = true;
     _emergencyClipStart = DateTime.now();
     Duration timeDifference = _emergencyClipStart.difference(_currentClipStart);

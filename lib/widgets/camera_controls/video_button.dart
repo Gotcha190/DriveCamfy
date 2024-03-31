@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:camera/camera.dart';
 import 'package:drive_camfy/utils/settings_manager.dart';
 import 'package:drive_camfy/utils/media_tools/video_recorder.dart';
@@ -14,6 +15,7 @@ class VideoButton extends StatefulWidget {
 class _VideoButtonState extends State<VideoButton> {
   late VideoRecorder _videoRecorder;
   late CameraController _controller;
+  late OverlayEntry _overlayEntry;
   bool _isRecording = false;
 
   @override
@@ -22,6 +24,44 @@ class _VideoButtonState extends State<VideoButton> {
     _videoRecorder = VideoRecorder();
     _controller = CameraWidget.of(context)!;
     _videoRecorder.setup(_controller);
+    _overlayEntry = OverlayEntry(builder: (context) {
+      return Stack(
+        children: [
+          Container(
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.red, width: 5),
+            ),
+          ),
+          const Positioned(
+            top: 40,
+            left: 0,
+            right: 0,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.warning,
+                  color: Colors.red,
+                ),
+                ///TODO: DELETE THIS YELLOW UNDERLINE UNDER EMERGENCY TEXT
+                Text(
+                  "EMERGENCY",
+                  style: TextStyle(
+                    color: Colors.red,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 40,
+                  ),
+                ),
+                Icon(
+                  Icons.warning,
+                  color: Colors.red,
+                ),
+              ],
+            ),
+          ),
+        ],
+      );
+    });
   }
 
   @override
@@ -42,8 +82,15 @@ class _VideoButtonState extends State<VideoButton> {
         }
       },
       onLongPress: () {
-        if (SettingsManager.recordMins > 0 && SettingsManager.recordCount >= 0) {
+        if (SettingsManager.recordMins > 0 &&
+            SettingsManager.recordCount >= 0) {
           _videoRecorder.startEmergencyRecording();
+          Overlay.of(context).insert(
+              _overlayEntry); // Add overlay when emergency recording starts
+          Timer(const Duration(minutes: 2), () {
+            // Remove overlay after 3 minutes
+            _overlayEntry.remove();
+          });
         }
       },
       style: ElevatedButton.styleFrom(
