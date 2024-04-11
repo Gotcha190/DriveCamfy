@@ -4,6 +4,7 @@ import 'package:drive_camfy/views/fullscreen_image_view.dart';
 import 'package:drive_camfy/views/fullscreen_video_view.dart';
 import 'package:drive_camfy/views/gallery_view.dart';
 import 'package:drive_camfy/views/homepage.dart';
+import 'package:drive_camfy/views/settings_view.dart';
 import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
 
@@ -31,6 +32,10 @@ class MyApp extends StatelessWidget {
             case '/':
               return MaterialPageRoute(
                 builder: (context) => const HomePage(),
+              );
+            case '/settings':
+              return MaterialPageRoute(
+                builder: (context) => const SettingsView(),
               );
             case '/gallery':
               return MaterialPageRoute(

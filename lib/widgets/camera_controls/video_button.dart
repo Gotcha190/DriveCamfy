@@ -43,13 +43,13 @@ class _VideoButtonState extends State<VideoButton> {
                   Icons.warning,
                   color: Colors.red,
                 ),
-                ///TODO: DELETE THIS YELLOW UNDERLINE UNDER EMERGENCY TEXT
                 Text(
                   "EMERGENCY",
                   style: TextStyle(
                     color: Colors.red,
                     fontWeight: FontWeight.bold,
                     fontSize: 40,
+                    decoration: TextDecoration.none,
                   ),
                 ),
                 Icon(
@@ -73,7 +73,7 @@ class _VideoButtonState extends State<VideoButton> {
           setState(() {
             _isRecording = false;
           });
-        } else if (SettingsManager.recordMins > 0 &&
+        } else if (SettingsManager.recordLength > 0 &&
             SettingsManager.recordCount >= 0) {
           _videoRecorder.recordRecursively();
           setState(() {
@@ -82,7 +82,7 @@ class _VideoButtonState extends State<VideoButton> {
         }
       },
       onLongPress: () {
-        if (SettingsManager.recordMins > 0 &&
+        if (SettingsManager.recordLength > 0 &&
             SettingsManager.recordCount >= 0) {
           _videoRecorder.startEmergencyRecording();
           Overlay.of(context).insert(

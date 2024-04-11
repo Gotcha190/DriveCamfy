@@ -15,7 +15,7 @@ class VideoRecorder {
 
   void setup(CameraController cameraController) {
     controller = cameraController;
-    _recordMins = SettingsManager.recordMins;
+    _recordMins = SettingsManager.recordLength;
     _recordCount = SettingsManager.recordCount;
   }
 
