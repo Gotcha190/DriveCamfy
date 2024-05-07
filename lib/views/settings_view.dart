@@ -9,7 +9,6 @@ class SettingsView extends StatefulWidget {
 }
 
 class _SettingsViewState extends State<SettingsView> {
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -53,7 +52,8 @@ class _SettingsViewState extends State<SettingsView> {
                 SettingsManager.cameraQuality = newValue!;
               });
             },
-            items: <String>['Low', 'Medium', 'High'].map<DropdownMenuItem<String>>((String value) {
+            items: <String>['Low', 'Medium', 'High']
+                .map<DropdownMenuItem<String>>((String value) {
               return DropdownMenuItem<String>(
                 value: value,
                 child: Text(value),
@@ -75,7 +75,7 @@ class _SettingsViewState extends State<SettingsView> {
         ListTile(
           title: const Text('Front Camera'),
           trailing: Switch(
-            value:  SettingsManager.frontCameraEnabled,
+            value: SettingsManager.frontCameraEnabled,
             onChanged: (value) {
               setState(() {
                 SettingsManager.frontCameraEnabled = value;
@@ -122,10 +122,11 @@ class _SettingsViewState extends State<SettingsView> {
                 SettingsManager.recordLength = newValue!;
               });
             },
-            items: <int>[1, 2, 3, 5, 10].map<DropdownMenuItem<int>>((int value) {
+            items:
+                <int>[1, 2, 3, 5, 10].map<DropdownMenuItem<int>>((int value) {
               return DropdownMenuItem<int>(
                 value: value,
-                child: Text(value as String),
+                child: Text(value.toString()),
               );
             }).toList(),
           ),
@@ -133,6 +134,8 @@ class _SettingsViewState extends State<SettingsView> {
         // Dodaj ListTile dla opcji maksymalnej wielkości nagrań
         ListTile(
           title: const Text('Max Record Size'),
+
+          ///TODO: Record size by GB not count
           trailing: DropdownButton<int>(
             value: SettingsManager.recordCount,
             onChanged: (int? newValue) {
@@ -143,7 +146,7 @@ class _SettingsViewState extends State<SettingsView> {
             items: <int>[5, 10, 15, 20].map<DropdownMenuItem<int>>((int value) {
               return DropdownMenuItem<int>(
                 value: value,
-                child: Text(value as String),
+                child: Text(value.toString()),
               );
             }).toList(),
           ),
@@ -158,7 +161,8 @@ class _SettingsViewState extends State<SettingsView> {
                 SettingsManager.recordLocation = newValue!;
               });
             },
-            items: <String>['Internal', 'External'].map<DropdownMenuItem<String>>((String value) {
+            items: <String>['Internal', 'External']
+                .map<DropdownMenuItem<String>>((String value) {
               return DropdownMenuItem<String>(
                 value: value,
                 child: Text(value),
@@ -176,7 +180,8 @@ class _SettingsViewState extends State<SettingsView> {
                 SettingsManager.photoLocation = newValue!;
               });
             },
-            items: <String>['Internal', 'External'].map<DropdownMenuItem<String>>((String value) {
+            items: <String>['Internal', 'External']
+                .map<DropdownMenuItem<String>>((String value) {
               return DropdownMenuItem<String>(
                 value: value,
                 child: Text(value),

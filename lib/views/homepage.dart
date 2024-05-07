@@ -1,14 +1,15 @@
+import 'package:drive_camfy/utils/settings_manager.dart';
 import 'package:flutter/material.dart';
 import 'package:drive_camfy/widgets/camera_widget.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({Key? key}) : super(key: key);
+  const HomePage({super.key});
 
   @override
-  _HomePageState createState() => _HomePageState();
+  HomePageState createState() => HomePageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class HomePageState extends State<HomePage> {
   String _text = 'auto';
   bool _isAuto = true;
   bool _isFlashOn = false;
@@ -42,11 +43,15 @@ class _HomePageState extends State<HomePage> {
                           width: iconSize,
                           height: iconSize,
                           child: IconButton(
-                            icon: _isFlashOn ? const Icon(Icons.flash_on) : const Icon(Icons.flash_off),
+                            icon: _isFlashOn
+                                ? const Icon(Icons.flash_on)
+                                : const Icon(Icons.flash_off),
                             color: Colors.white,
                             onPressed: () {
                               setState(() {
-                                _isFlashOn = !_isFlashOn; // Odwrócenie stanu flash
+                                _isFlashOn =
+                                    !_isFlashOn; // Odwrócenie stanu flash
+                                SettingsManager.flashEnabled = _isFlashOn;
                               });
                             },
                           ),
@@ -78,11 +83,21 @@ class _HomePageState extends State<HomePage> {
                           width: iconSize,
                           height: iconSize,
                           child: IconButton(
-                            icon: _isRotationLocked ? const Icon(Icons.screen_lock_rotation) : const Icon(Icons.screen_rotation),
+                            icon: _isRotationLocked
+                                ? const Icon(Icons.screen_lock_rotation)
+                                : const Icon(Icons.screen_rotation),
                             color: Colors.white,
                             onPressed: () {
                               setState(() {
-                                _isRotationLocked = !_isRotationLocked; // Odwrócenie stanu flash
+                                _isRotationLocked =
+                                    !_isRotationLocked; // Toggle rotation lock state
+                                if (_isRotationLocked) {
+                                  SettingsManager
+                                      .rotationLock(); // Lock rotation
+                                } else {
+                                  SettingsManager
+                                      .rotationUnlock(); // Unlock rotation
+                                }
                               });
                             },
                           ),

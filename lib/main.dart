@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:drive_camfy/utils/app_directory.dart';
+import 'package:drive_camfy/utils/settings_manager.dart';
 import 'package:drive_camfy/views/fullscreen_image_view.dart';
 import 'package:drive_camfy/views/fullscreen_video_view.dart';
 import 'package:drive_camfy/views/gallery_view.dart';
@@ -11,6 +12,7 @@ import 'package:sizer/sizer.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await AppDirectory().init();
+  await SettingsManager.init();
   runApp(const MyApp());
 }
 
