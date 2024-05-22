@@ -5,10 +5,11 @@ import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 
 final GlobalKey<CameraWidgetState> cameraWidgetKey =
-GlobalKey<CameraWidgetState>();
+    GlobalKey<CameraWidgetState>();
 
 class CameraWidget extends StatefulWidget {
-  const CameraWidget({super.key});
+  final Function(bool) onControllerInitialized;
+  const CameraWidget({super.key, required this.onControllerInitialized});
 
   @override
   CameraWidgetState createState() => CameraWidgetState();
@@ -64,6 +65,7 @@ class CameraWidgetState extends State<CameraWidget> {
     _controller = await CameraWidget.createController();
     try {
       await _controller.initialize();
+      widget.onControllerInitialized(true);
       VideoRecorder.instance.setController(_controller);
       if (mounted) {
         setState(() {});
@@ -74,6 +76,7 @@ class CameraWidgetState extends State<CameraWidget> {
   }
 
   Future<void> reinitializeCamera() async {
+    widget.onControllerInitialized(false);
     setState(() {
       _initializeControllerFuture = _initializeCamera();
     });
@@ -93,7 +96,6 @@ class CameraWidgetState extends State<CameraWidget> {
         future: _initializeControllerFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.done) {
-            print(_controller);
             return Stack(
               fit: StackFit.expand,
               alignment: AlignmentDirectional.bottomCenter,

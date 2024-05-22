@@ -13,6 +13,11 @@ class SettingsViewState extends State<SettingsView> {
   late bool _frontCameraEnabled;
   late bool _recordSoundEnabled;
   late bool _gSensorEnabled;
+  late String _cameraQuality;
+  late int _recordLength;
+  late int _recordCount;
+  late String _recordLocation;
+  late String _photoLocation;
 
   @override
   void initState() {
@@ -21,6 +26,27 @@ class SettingsViewState extends State<SettingsView> {
     _frontCameraEnabled = SettingsManager.frontCameraEnabled;
     _recordSoundEnabled = SettingsManager.recordSoundEnabled;
     _gSensorEnabled = SettingsManager.gSensorEnabled;
+    _cameraQuality = SettingsManager.cameraQuality;
+    _recordLength = SettingsManager.recordLength;
+    _recordCount = SettingsManager.recordCount;
+    _recordLocation = SettingsManager.recordLocation;
+    _photoLocation = SettingsManager.photoLocation;
+  }
+
+  @override
+  void dispose() {
+    // Apply the local settings to the SettingsManager when the view is disposed
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_rotationLocked) {
+        SettingsManager.rotationLock();
+      } else {
+        SettingsManager.rotationUnlock();
+      }
+      SettingsManager.frontCameraEnabled = _frontCameraEnabled;
+      SettingsManager.recordSoundEnabled = _recordSoundEnabled;
+      SettingsManager.gSensorEnabled = _gSensorEnabled;
+    });
+    super.dispose();
   }
 
   @override
@@ -65,11 +91,6 @@ class SettingsViewState extends State<SettingsView> {
             value: _rotationLocked,
             onChanged: (value) {
               setState(() {
-                if (value) {
-                  SettingsManager.rotationLock();
-                } else {
-                  SettingsManager.rotationUnlock();
-                }
                 _rotationLocked = value;
               });
             },
@@ -85,10 +106,10 @@ class SettingsViewState extends State<SettingsView> {
         ListTile(
           title: const Text('Camera Quality'),
           trailing: DropdownButton<String>(
-            value: SettingsManager.cameraQuality,
+            value: _cameraQuality,
             onChanged: (String? newValue) {
               setState(() {
-                SettingsManager.cameraQuality = newValue!;
+                _cameraQuality = newValue!;
               });
             },
             items: <String>['Low', 'Medium', 'High']
@@ -106,7 +127,6 @@ class SettingsViewState extends State<SettingsView> {
             value: _frontCameraEnabled,
             onChanged: (value) {
               setState(() {
-                SettingsManager.frontCameraEnabled = value;
                 _frontCameraEnabled = value;
               });
             },
@@ -118,7 +138,6 @@ class SettingsViewState extends State<SettingsView> {
             value: _recordSoundEnabled,
             onChanged: (value) {
               setState(() {
-                SettingsManager.recordSoundEnabled = value;
                 _recordSoundEnabled = value;
               });
             },
@@ -130,7 +149,6 @@ class SettingsViewState extends State<SettingsView> {
             value: _gSensorEnabled,
             onChanged: (value) {
               setState(() {
-                SettingsManager.gSensorEnabled = value;
                 _gSensorEnabled = value;
               });
             },
@@ -146,13 +164,14 @@ class SettingsViewState extends State<SettingsView> {
         ListTile(
           title: const Text('Record Length'),
           trailing: DropdownButton<int>(
-            value: SettingsManager.recordLength,
+            value: _recordLength,
             onChanged: (int? newValue) {
               setState(() {
-                SettingsManager.recordLength = newValue!;
+                _recordLength = newValue!;
               });
             },
-            items: <int>[1, 2, 3, 5, 10].map<DropdownMenuItem<int>>((int value) {
+            items:
+                <int>[1, 2, 3, 5, 10].map<DropdownMenuItem<int>>((int value) {
               return DropdownMenuItem<int>(
                 value: value,
                 child: Text(value.toString()),
@@ -162,13 +181,11 @@ class SettingsViewState extends State<SettingsView> {
         ),
         ListTile(
           title: const Text('Max Record Size'),
-
-          ///TODO: Record size by GB not count
           trailing: DropdownButton<int>(
-            value: SettingsManager.recordCount,
+            value: _recordCount,
             onChanged: (int? newValue) {
               setState(() {
-                SettingsManager.recordCount = newValue!;
+                _recordCount = newValue!;
               });
             },
             items: <int>[5, 10, 15, 20].map<DropdownMenuItem<int>>((int value) {
@@ -182,10 +199,10 @@ class SettingsViewState extends State<SettingsView> {
         ListTile(
           title: const Text('Record Location'),
           trailing: DropdownButton<String>(
-            value: SettingsManager.recordLocation,
+            value: _recordLocation,
             onChanged: (String? newValue) {
               setState(() {
-                SettingsManager.recordLocation = newValue!;
+                _recordLocation = newValue!;
               });
             },
             items: <String>['Internal', 'External']
@@ -200,10 +217,10 @@ class SettingsViewState extends State<SettingsView> {
         ListTile(
           title: const Text('Photo Location'),
           trailing: DropdownButton<String>(
-            value: SettingsManager.photoLocation,
+            value: _photoLocation,
             onChanged: (String? newValue) {
               setState(() {
-                SettingsManager.photoLocation = newValue!;
+                _photoLocation = newValue!;
               });
             },
             items: <String>['Internal', 'External']

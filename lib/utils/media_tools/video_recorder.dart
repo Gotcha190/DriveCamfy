@@ -26,8 +26,10 @@ class VideoRecorder {
   late DateTime _emergencyClipStart;
   late int _recordMins;
   late int _recordCount;
-  bool _isEmergencyRecording = false;
   bool _shouldContinueRecording = false;
+
+  bool get isEmergencyRecording => _isEmergencyRecording;
+  bool _isEmergencyRecording = false;
 
   RecordingStateCallback? recordingStateCallback;
 
@@ -42,7 +44,6 @@ class VideoRecorder {
     required GlobalKey<CameraWidgetState> key,
     RecordingStateCallback? callback,
   }) async {
-    print("SETUP");
     _controller = controller;
     _context = context;
     _recordMins = SettingsManager.recordLength;
@@ -52,9 +53,8 @@ class VideoRecorder {
   }
 
   Future<void> _onSettingsChanged(String settingName) async {
-    if(!_controller.value.isRecordingVideo) return;
-    print("_onSettingsChanged");
-    switch (settingName){
+    if (!_controller.value.isRecordingVideo) return;
+    switch (settingName) {
       case SettingsManager.keyRecordSoundEnabled:
         await stopRecording(false);
         await reinitializeCamera(_context);
@@ -72,7 +72,6 @@ class VideoRecorder {
   }
 
   Future<void> recordRecursively(bool shouldContinueRecording) async {
-    print("recordRecursively");
     _shouldContinueRecording = shouldContinueRecording;
     if (_recordMins > 0 && _recordCount >= 0) {
       if (!_controller.value.isInitialized) {
@@ -81,14 +80,12 @@ class VideoRecorder {
       }
       while (_shouldContinueRecording) {
         if (!_controller.value.isRecordingVideo) {
-          print("recordRecursively NoRECORDING");
           await controller.startVideoRecording();
           _currentClipStart = DateTime.now();
           recordingStateCallback?.call();
         }
         await Future.delayed(Duration(minutes: _recordMins));
         if (_controller.value.isRecordingVideo && !_isEmergencyRecording) {
-          print("recordRecursively RECORDING");
           await stopRecording(true);
         }
       }
@@ -106,13 +103,11 @@ class VideoRecorder {
   }
 
   Future<void> stopRecording(bool cleanup) async {
-    print("stopRecording");
     try {
-
       if (_controller.value.isRecordingVideo) {
         XFile tempFile = await _controller.stopVideoRecording();
         String formattedDate =
-        DateFormat('yyyy-MM-dd_HH-mm-ss').format(_currentClipStart);
+            DateFormat('yyyy-MM-dd_HH-mm-ss').format(_currentClipStart);
         final String videoPath =
             '${AppDirectory().videos}/video_$formattedDate.mp4';
         await tempFile.saveTo(videoPath);
@@ -132,7 +127,7 @@ class VideoRecorder {
     if (_controller.value.isRecordingVideo) {
       XFile tempFile = await _controller.stopVideoRecording();
       String formattedDate =
-      DateFormat('yyyy-MM-dd_HH-mm-ss').format(_emergencyClipStart);
+          DateFormat('yyyy-MM-dd_HH-mm-ss').format(_emergencyClipStart);
       final String videoPath =
           '${AppDirectory().emergency}/EMERGENCY_$formattedDate.mp4';
       await tempFile.saveTo(videoPath);
@@ -152,9 +147,7 @@ class VideoRecorder {
   }
 
   Future<void> reinitializeCamera(BuildContext context) async {
-    print("reinitializeCamera");
     if (_controller.value.isRecordingVideo) {
-      print("reinitializeCamera RECORDING");
       await _controller.stopVideoRecording();
       recordingStateCallback?.call();
     }

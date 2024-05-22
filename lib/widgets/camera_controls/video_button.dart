@@ -87,11 +87,15 @@ class _VideoButtonState extends State<VideoButton> {
         }
         if (_videoRecorder.controller.value.isRecordingVideo) {
           await _videoRecorder.stopRecording(true);
-          setState(() {});
+          if (mounted) {
+            setState(() {});
+          }
         } else if (SettingsManager.recordLength > 0 &&
             SettingsManager.recordCount >= 0) {
           await _videoRecorder.recordRecursively(true);
-          setState(() {});
+          if (mounted) {
+            setState(() {});
+          }
         }
       },
       onLongPress: () async {
@@ -100,13 +104,19 @@ class _VideoButtonState extends State<VideoButton> {
           return;
         }
         if (SettingsManager.recordLength > 0 &&
-            SettingsManager.recordCount >= 0) {
-          await _videoRecorder.startEmergencyRecording();
+            SettingsManager.recordCount >= 0 &&
+            !_videoRecorder.isEmergencyRecording) {
           Overlay.of(context).insert(
               _overlayEntry); // Add overlay when emergency recording starts
+          await _videoRecorder.startEmergencyRecording();
           Timer(const Duration(minutes: 2), () {
             _overlayEntry.remove();
           });
+        }
+        if (_videoRecorder.isEmergencyRecording) {
+          _overlayEntry.remove();
+          await _videoRecorder.stopEmergencyRecording();
+          await _videoRecorder.recordRecursively(true);
         }
       },
       style: ElevatedButton.styleFrom(

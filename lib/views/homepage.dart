@@ -20,6 +20,7 @@ class HomePageState extends State<HomePage> {
   late bool _isAuto;
   late bool _isMuted;
   late bool _isRotationLocked;
+  bool _isCameraInitialized = false;
 
   @override
   void initState() {
@@ -37,18 +38,32 @@ class HomePageState extends State<HomePage> {
     super.dispose();
   }
 
-  void _onSettingsChanged(String settingName) {
+  void _onCameraInitialized(bool isInitialized) {
     setState(() {
-      // Update UI status based on changes in settings
-      if (settingName == SettingsManager.keyRecordSoundEnabled) {
-        _isMuted = !SettingsManager.recordSoundEnabled;
-      } else if (settingName == SettingsManager.keyRotationLocked) {
-        _isRotationLocked = SettingsManager.rotationLocked;
-      } else if (settingName == SettingsManager.keyGSensorEnabled) {
-        _isAuto = SettingsManager.gSensorEnabled;
-        _text = _isAuto ? 'auto' : 'manual';
-      }
+      _isCameraInitialized = isInitialized;
     });
+  }
+
+  void _onSettingsChanged(String settingName) {
+    if (mounted) {
+      setState(() {
+        // Update UI status based on changes in settings
+        switch (settingName) {
+          case SettingsManager.keyRecordSoundEnabled:
+            _isMuted = !SettingsManager.recordSoundEnabled;
+            break;
+          case SettingsManager.keyRotationLocked:
+            _isRotationLocked = SettingsManager.rotationLocked;
+            break;
+          case SettingsManager.keyGSensorEnabled:
+            _isAuto = SettingsManager.gSensorEnabled;
+            _text = _isAuto ? 'auto' : 'manual';
+            break;
+          default:
+            print("Homepage _onSettingsChanged run unknown setting");
+        }
+      });
+    }
   }
 
   @override
@@ -59,7 +74,9 @@ class HomePageState extends State<HomePage> {
       body: Stack(
         children: [
           // CameraWidget jako główny widok
-          CameraWidget(key: cameraWidgetKey),
+          CameraWidget(
+              key: cameraWidgetKey,
+              onControllerInitialized: _onCameraInitialized),
           // Przyciski nad CameraWidget
           Positioned(
             top: 40,
@@ -82,16 +99,18 @@ class HomePageState extends State<HomePage> {
                       RotationButton(
                         isRotationLocked: _isRotationLocked,
                         size: iconSize,
-                        onPressed: () {
-                          setState(() {
-                            _isRotationLocked = !_isRotationLocked;
-                            if (_isRotationLocked) {
-                              SettingsManager.rotationLock();
-                            } else {
-                              SettingsManager.rotationUnlock();
-                            }
-                          });
-                        },
+                        onPressed: _isCameraInitialized
+                            ? () {
+                                setState(() {
+                                  _isRotationLocked = !_isRotationLocked;
+                                  if (_isRotationLocked) {
+                                    SettingsManager.rotationLock();
+                                  } else {
+                                    SettingsManager.rotationUnlock();
+                                  }
+                                });
+                              }
+                            : () {},
                       ),
                       SizedBox(height: iconSize / 4),
                       SizedBox(height: iconSize),
@@ -103,27 +122,33 @@ class HomePageState extends State<HomePage> {
                       SettingsButton(size: iconSize),
                       SizedBox(height: iconSize / 4),
                       GSensorButton(
-                          text: _text,
-                          size: iconSize,
-                          onPressed: () {
-                            bool temp = !_isAuto;
-                            _text = temp ? 'manual' : 'auto';
-                            setState(() {
-                              _isAuto = temp;
-                              SettingsManager.gSensorEnabled = _isAuto;
-                            });
-                          }),
+                        text: _text,
+                        size: iconSize,
+                        onPressed: _isCameraInitialized
+                            ? () {
+                                bool temp = !_isAuto;
+                                _text = temp ? 'manual' : 'auto';
+                                setState(() {
+                                  _isAuto = temp;
+                                  SettingsManager.gSensorEnabled = _isAuto;
+                                });
+                              }
+                            : () {},
+                      ),
                       SizedBox(height: iconSize / 4),
                       SoundButton(
                         isMuted: _isMuted,
                         size: iconSize,
-                        onPressed: () {
-                          setState(() {
-                            _isMuted = !_isMuted;
-                            SettingsManager.recordSoundEnabled = !_isMuted;
-                          });
-                        },
-                      )
+                        onPressed: _isCameraInitialized
+                            ? () {
+                                setState(() {
+                                  _isMuted = !_isMuted;
+                                  SettingsManager.recordSoundEnabled =
+                                      !_isMuted;
+                                });
+                              }
+                            : () {},
+                      ),
                     ],
                   ),
                 ],
