@@ -14,81 +14,100 @@ class VideoButton extends StatefulWidget {
 
 class _VideoButtonState extends State<VideoButton> {
   late VideoRecorder _videoRecorder;
-  late CameraController _controller;
   late OverlayEntry _overlayEntry;
   bool _isRecording = false;
 
   @override
   void initState() {
     super.initState();
-    _videoRecorder = VideoRecorder();
-    _controller = CameraWidget.of(context)!;
-    _videoRecorder.setup(_controller);
+    _videoRecorder = VideoRecorder.instance;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final controller = CameraWidget.of(context);
+      if (controller != null) {
+        _videoRecorder.setup(
+          controller: controller,
+          context: context,
+          key: cameraWidgetKey,
+          callback: _updateRecordingState,
+        );
+        // _videoRecorder.setController(controller);
+        setState(() {
+          _isRecording = controller.value.isRecordingVideo;
+        });
+      } else {
+        print('Camera controller not found.');
+      }
+    });
     _overlayEntry = OverlayEntry(builder: (context) {
-      return Stack(
-        children: [
-          Container(
-            decoration: BoxDecoration(
-              border: Border.all(color: Colors.red, width: 5),
+      return const Positioned(
+        top: 40,
+        left: 0,
+        right: 0,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.warning,
+              color: Colors.red,
             ),
-          ),
-          const Positioned(
-            top: 40,
-            left: 0,
-            right: 0,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.warning,
-                  color: Colors.red,
-                ),
-                Text(
-                  "EMERGENCY",
-                  style: TextStyle(
-                    color: Colors.red,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 40,
-                    decoration: TextDecoration.none,
-                  ),
-                ),
-                Icon(
-                  Icons.warning,
-                  color: Colors.red,
-                ),
-              ],
+            Text(
+              "EMERGENCY",
+              style: TextStyle(
+                color: Colors.red,
+                fontWeight: FontWeight.bold,
+                fontSize: 40,
+                decoration: TextDecoration.none,
+              ),
             ),
-          ),
-        ],
+            Icon(
+              Icons.warning,
+              color: Colors.red,
+            ),
+          ],
+        ),
       );
+    });
+  }
+
+  void _updateRecordingState(bool isRecording) {
+    setState(() {
+      _isRecording = isRecording;
     });
   }
 
   @override
   Widget build(BuildContext context) {
     return ElevatedButton(
-      onPressed: () {
-        if (_controller.value.isRecordingVideo) {
-          _videoRecorder.stopRecording(false);
+      onPressed: () async {
+        print("BUTTON CONTROLLER: ${_videoRecorder.controller}");
+        if (!_videoRecorder.controller.value.isInitialized) {
+          print('Controller is not initialized.');
+          return;
+        }
+        if (_videoRecorder.controller.value.isRecordingVideo) {
+          await _videoRecorder.stopRecording(false);
           setState(() {
             _isRecording = false;
           });
         } else if (SettingsManager.recordLength > 0 &&
             SettingsManager.recordCount >= 0) {
-          _videoRecorder.recordRecursively();
+          await _videoRecorder.recordRecursively();
           setState(() {
             _isRecording = true;
           });
         }
       },
-      onLongPress: () {
+      onLongPress: () async {
+        if (!_videoRecorder.controller.value.isInitialized) {
+          print('Controller is not initialized.');
+          return;
+        }
         if (SettingsManager.recordLength > 0 &&
             SettingsManager.recordCount >= 0) {
-          _videoRecorder.startEmergencyRecording();
+          await _videoRecorder.startEmergencyRecording();
           Overlay.of(context).insert(
               _overlayEntry); // Add overlay when emergency recording starts
           Timer(const Duration(minutes: 2), () {
-            // Remove overlay after 3 minutes
             _overlayEntry.remove();
           });
         }

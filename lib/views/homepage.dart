@@ -1,4 +1,10 @@
+import 'package:drive_camfy/utils/settings_listener.dart';
 import 'package:drive_camfy/utils/settings_manager.dart';
+import 'package:drive_camfy/widgets/interface_buttons/camera_button.dart';
+import 'package:drive_camfy/widgets/interface_buttons/g_sensor_button.dart';
+import 'package:drive_camfy/widgets/interface_buttons/rotation_button.dart';
+import 'package:drive_camfy/widgets/interface_buttons/settings_button.dart';
+import 'package:drive_camfy/widgets/interface_buttons/sound_button.dart';
 import 'package:flutter/material.dart';
 import 'package:drive_camfy/widgets/camera_widget.dart';
 
@@ -10,19 +16,50 @@ class HomePage extends StatefulWidget {
 }
 
 class HomePageState extends State<HomePage> {
-  String _text = 'auto';
-  bool _isAuto = true;
-  bool _isFlashOn = false;
-  bool _isRotationLocked = false;
+  late String _text;
+  late bool _isAuto;
+  late bool _isMuted;
+  late bool _isRotationLocked;
+
+  @override
+  void initState() {
+    super.initState();
+    _isMuted = !SettingsManager.recordSoundEnabled;
+    _isRotationLocked = SettingsManager.rotationLocked;
+    _isAuto = SettingsManager.gSensorEnabled;
+    _text = _isAuto ? 'auto' : 'manual';
+    SettingsListener.startListening(_onSettingsChanged);
+  }
+
+  @override
+  void dispose() {
+    SettingsListener.stopListening(_onSettingsChanged);
+    super.dispose();
+  }
+
+  void _onSettingsChanged(String settingName) {
+    setState(() {
+      // Update UI status based on changes in settings
+      if (settingName == SettingsManager.keyRecordSoundEnabled) {
+        _isMuted = !SettingsManager.recordSoundEnabled;
+      } else if (settingName == SettingsManager.keyRotationLocked) {
+        _isRotationLocked = SettingsManager.rotationLocked;
+      } else if (settingName == SettingsManager.keyGSensorEnabled) {
+        _isAuto = SettingsManager.gSensorEnabled;
+        _text = _isAuto ? 'auto' : 'manual';
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     double iconSize = 60;
     return Scaffold(
+      backgroundColor: Colors.black,
       body: Stack(
         children: [
           // CameraWidget jako główny widok
-          const CameraWidget(),
+          CameraWidget(key: cameraWidgetKey),
           // Przyciski nad CameraWidget
           Positioned(
             top: 40,
@@ -37,131 +74,56 @@ class HomePageState extends State<HomePage> {
                   // Przyciski po lewej stronie
                   Column(
                     children: [
-                      Container(
-                        color: Colors.black26,
-                        child: SizedBox(
-                          width: iconSize,
-                          height: iconSize,
-                          child: IconButton(
-                            icon: _isFlashOn
-                                ? const Icon(Icons.flash_on)
-                                : const Icon(Icons.flash_off),
-                            color: Colors.white,
-                            onPressed: () {
-                              setState(() {
-                                _isFlashOn =
-                                    !_isFlashOn; // Odwrócenie stanu flash
-                                SettingsManager.flashEnabled = _isFlashOn;
-                              });
-                            },
-                          ),
-                        ),
+                      CameraButton(
+                        onPressed: () {},
+                        size: iconSize,
                       ),
-                      SizedBox(
-                        width: iconSize / 4,
-                        height: iconSize / 4,
+                      SizedBox(height: iconSize / 4),
+                      RotationButton(
+                        isRotationLocked: _isRotationLocked,
+                        size: iconSize,
+                        onPressed: () {
+                          setState(() {
+                            _isRotationLocked = !_isRotationLocked;
+                            if (_isRotationLocked) {
+                              SettingsManager.rotationLock();
+                            } else {
+                              SettingsManager.rotationUnlock();
+                            }
+                          });
+                        },
                       ),
-                      Container(
-                        color: Colors.black26,
-                        child: SizedBox(
-                          width: iconSize,
-                          height: iconSize,
-                          child: IconButton(
-                            icon: const Icon(Icons.camera_front),
-                            color: Colors.white,
-                            onPressed: () {},
-                          ),
-                        ),
-                      ),
-                      SizedBox(
-                        width: iconSize / 4,
-                        height: iconSize / 4,
-                      ),
-                      Container(
-                        color: Colors.black26,
-                        child: SizedBox(
-                          width: iconSize,
-                          height: iconSize,
-                          child: IconButton(
-                            icon: _isRotationLocked
-                                ? const Icon(Icons.screen_lock_rotation)
-                                : const Icon(Icons.screen_rotation),
-                            color: Colors.white,
-                            onPressed: () {
-                              setState(() {
-                                _isRotationLocked =
-                                    !_isRotationLocked; // Toggle rotation lock state
-                                if (_isRotationLocked) {
-                                  SettingsManager
-                                      .rotationLock(); // Lock rotation
-                                } else {
-                                  SettingsManager
-                                      .rotationUnlock(); // Unlock rotation
-                                }
-                              });
-                            },
-                          ),
-                        ),
-                      ),
+                      SizedBox(height: iconSize / 4),
+                      SizedBox(height: iconSize),
                     ],
                   ),
                   // Przyciski po prawej stronie
                   Column(
                     children: [
-                      Container(
-                        color: Colors.black26,
-                        child: SizedBox(
-                          width: iconSize,
-                          height: iconSize,
-                          child: IconButton(
-                            icon: const Icon(Icons.settings),
-                            color: Colors.white,
-                            onPressed: () {
-                              Navigator.of(context).pushNamed('/settings');
-                            },
-                          ),
-                        ),
-                      ),
-                      SizedBox(
-                        width: iconSize / 4,
-                        height: iconSize / 4,
-                      ),
-                      SizedBox(
-                        width: iconSize,
-                        height: iconSize,
-                        child: Container(
-                          color: Colors.black26,
-                          child: Column(
-                            children: [
-                              IconButton(
-                                icon: const Icon(Icons.warning),
-                                color: Colors.white,
-                                onPressed: () {
-                                  setState(() {
-                                    _text = _isAuto ? 'manual' : 'auto';
-                                    _isAuto = !_isAuto;
-                                  });
-                                },
-                              ),
-                              Text(
-                                _text,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 8,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      SizedBox(
-                        width: iconSize / 4,
-                        height: iconSize / 4,
-                      ),
-                      SizedBox(
-                        width: iconSize,
-                        height: iconSize,
-                      ),
+                      SettingsButton(size: iconSize),
+                      SizedBox(height: iconSize / 4),
+                      GSensorButton(
+                          text: _text,
+                          size: iconSize,
+                          onPressed: () {
+                            bool temp = !_isAuto;
+                            _text = temp ? 'manual' : 'auto';
+                            setState(() {
+                              _isAuto = temp;
+                              SettingsManager.gSensorEnabled = _isAuto;
+                            });
+                          }),
+                      SizedBox(height: iconSize / 4),
+                      SoundButton(
+                        isMuted: _isMuted,
+                        size: iconSize,
+                        onPressed: () {
+                          setState(() {
+                            _isMuted = !_isMuted;
+                            SettingsManager.recordSoundEnabled = !_isMuted;
+                          });
+                        },
+                      )
                     ],
                   ),
                 ],
