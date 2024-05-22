@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'package:camera/camera.dart';
 import 'package:drive_camfy/utils/settings_manager.dart';
 import 'package:drive_camfy/utils/media_tools/video_recorder.dart';
 import 'package:drive_camfy/widgets/camera_widget.dart';
@@ -15,7 +14,6 @@ class VideoButton extends StatefulWidget {
 class _VideoButtonState extends State<VideoButton> {
   late VideoRecorder _videoRecorder;
   late OverlayEntry _overlayEntry;
-  bool _isRecording = false;
 
   @override
   void initState() {
@@ -30,10 +28,9 @@ class _VideoButtonState extends State<VideoButton> {
           key: cameraWidgetKey,
           callback: _updateRecordingState,
         );
-        // _videoRecorder.setController(controller);
-        setState(() {
-          _isRecording = controller.value.isRecordingVideo;
-        });
+        if (mounted) {
+          setState(() {});
+        }
       } else {
         print('Camera controller not found.');
       }
@@ -69,32 +66,32 @@ class _VideoButtonState extends State<VideoButton> {
     });
   }
 
-  void _updateRecordingState(bool isRecording) {
-    setState(() {
-      _isRecording = isRecording;
-    });
+  void _updateRecordingState() {
+    if (mounted) {
+      setState(() {});
+    }
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return ElevatedButton(
       onPressed: () async {
-        print("BUTTON CONTROLLER: ${_videoRecorder.controller}");
         if (!_videoRecorder.controller.value.isInitialized) {
           print('Controller is not initialized.');
           return;
         }
         if (_videoRecorder.controller.value.isRecordingVideo) {
-          await _videoRecorder.stopRecording(false);
-          setState(() {
-            _isRecording = false;
-          });
+          await _videoRecorder.stopRecording(true);
+          setState(() {});
         } else if (SettingsManager.recordLength > 0 &&
             SettingsManager.recordCount >= 0) {
-          await _videoRecorder.recordRecursively();
-          setState(() {
-            _isRecording = true;
-          });
+          await _videoRecorder.recordRecursively(true);
+          setState(() {});
         }
       },
       onLongPress: () async {
@@ -119,7 +116,9 @@ class _VideoButtonState extends State<VideoButton> {
       ),
       child: Icon(
         Icons.circle,
-        color: _isRecording ? Colors.red : Colors.black,
+        color: _videoRecorder.controller.value.isRecordingVideo
+            ? Colors.red
+            : Colors.black,
       ),
     );
   }

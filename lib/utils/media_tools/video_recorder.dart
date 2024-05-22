@@ -7,7 +7,7 @@ import 'package:drive_camfy/widgets/camera_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-typedef RecordingStateCallback = void Function(bool isRecording);
+typedef RecordingStateCallback = void Function();
 
 class VideoRecorder {
   static final VideoRecorder _instance = VideoRecorder._internal();
@@ -27,12 +27,12 @@ class VideoRecorder {
   late int _recordMins;
   late int _recordCount;
   bool _isEmergencyRecording = false;
+  bool _shouldContinueRecording = false;
 
   RecordingStateCallback? recordingStateCallback;
 
   CameraController get controller => _controller;
   void setController(CameraController controller) {
-    print("Controller set by camera_widget after reinitializing: $controller");
     _controller = controller;
   }
 
@@ -42,57 +42,55 @@ class VideoRecorder {
     required GlobalKey<CameraWidgetState> key,
     RecordingStateCallback? callback,
   }) async {
+    print("SETUP");
     _controller = controller;
     _context = context;
     _recordMins = SettingsManager.recordLength;
     _recordCount = SettingsManager.recordCount;
     SettingsManager.subscribeToSettingsChanges(_onSettingsChanged);
     recordingStateCallback = callback;
-
-    // Sprawdź, czy kontekst jest dostępny przed użyciem
-    // final currentContext = key.currentContext;
-    // print(currentContext);
-    // if (currentContext != null) {
-    //   final controller = CameraWidget.of(currentContext);
-    //   print("VideoRecorder controller: $controller");
-    //   setController(controller!);
-    // } else {
-    //   print('Current context is null.');
-    // }
   }
 
   Future<void> _onSettingsChanged(String settingName) async {
-    print("VideoRecorderd controller _onSettingsChanged without recording: $_controller");
-    if (settingName == SettingsManager.keyRecordSoundEnabled &&
-        _controller.value.isRecordingVideo) {
-      await stopRecording(false).then((_) async {
+    if(!_controller.value.isRecordingVideo) return;
+    print("_onSettingsChanged");
+    switch (settingName){
+      case SettingsManager.keyRecordSoundEnabled:
+        await stopRecording(false);
         await reinitializeCamera(_context);
-        print("VideoRecorderd controller _onSettingsChanged with recording: $_controller");
-        recordingStateCallback?.call(true);
-        await recordRecursively();
-      });
-    } else if (settingName == SettingsManager.keyRecordLength) {
-      _recordMins = SettingsManager.recordLength;
-    } else if (settingName == SettingsManager.keyRecordCount) {
-      _recordCount = SettingsManager.recordCount;
+        await recordRecursively(true);
+        break;
+      case SettingsManager.keyRecordLength:
+        _recordMins = SettingsManager.recordLength;
+        break;
+      case SettingsManager.keyRecordCount:
+        _recordCount = SettingsManager.recordCount;
+        break;
+      default:
+        print("VideoRecorder _onSettingsChanged run unknown setting");
     }
   }
 
-  Future<void> recordRecursively() async {
+  Future<void> recordRecursively(bool shouldContinueRecording) async {
+    print("recordRecursively");
+    _shouldContinueRecording = shouldContinueRecording;
     if (_recordMins > 0 && _recordCount >= 0) {
       if (!_controller.value.isInitialized) {
         print('Controller is not initialized.');
         return;
       }
-      if (!_controller.value.isRecordingVideo) {
-        await controller.startVideoRecording();
-      }
-      _currentClipStart = DateTime.now();
-      recordingStateCallback?.call(true);
-      await Future.delayed(Duration(minutes: _recordMins));
-      if (controller.value.isRecordingVideo && !_isEmergencyRecording) {
-        await stopRecording(true);
-        await recordRecursively();
+      while (_shouldContinueRecording) {
+        if (!_controller.value.isRecordingVideo) {
+          print("recordRecursively NoRECORDING");
+          await controller.startVideoRecording();
+          _currentClipStart = DateTime.now();
+          recordingStateCallback?.call();
+        }
+        await Future.delayed(Duration(minutes: _recordMins));
+        if (_controller.value.isRecordingVideo && !_isEmergencyRecording) {
+          print("recordRecursively RECORDING");
+          await stopRecording(true);
+        }
       }
     }
   }
@@ -108,7 +106,9 @@ class VideoRecorder {
   }
 
   Future<void> stopRecording(bool cleanup) async {
+    print("stopRecording");
     try {
+
       if (_controller.value.isRecordingVideo) {
         XFile tempFile = await _controller.stopVideoRecording();
         String formattedDate =
@@ -117,8 +117,9 @@ class VideoRecorder {
             '${AppDirectory().videos}/video_$formattedDate.mp4';
         await tempFile.saveTo(videoPath);
         File(tempFile.path).delete();
-        recordingStateCallback?.call(false);
+        recordingStateCallback?.call();
         if (cleanup) {
+          _shouldContinueRecording = false;
           await deleteOldRecordings();
         }
       }
@@ -150,19 +151,16 @@ class VideoRecorder {
     }
   }
 
-  Future<void> reinitializeCamera(BuildContext context, {void Function(CameraController)? onControllerChanged}) async {
+  Future<void> reinitializeCamera(BuildContext context) async {
+    print("reinitializeCamera");
     if (_controller.value.isRecordingVideo) {
+      print("reinitializeCamera RECORDING");
       await _controller.stopVideoRecording();
+      recordingStateCallback?.call();
     }
     await _controller.dispose();
     _controller = await CameraWidget.createController();
     await _controller.initialize();
     CameraWidget.setController(context, _controller);
-    print("VideoRecorder reinitialized controller: $_controller");
-    if (onControllerChanged != null) {
-      onControllerChanged(_controller);
-    }
-    recordingStateCallback?.call(true);
-    await recordRecursively();
   }
 }

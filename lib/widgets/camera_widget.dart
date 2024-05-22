@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 
 final GlobalKey<CameraWidgetState> cameraWidgetKey =
-    GlobalKey<CameraWidgetState>();
+GlobalKey<CameraWidgetState>();
 
 class CameraWidget extends StatefulWidget {
   const CameraWidget({super.key});
@@ -37,22 +37,19 @@ class CameraWidget extends StatefulWidget {
 class CameraWidgetState extends State<CameraWidget> {
   late CameraController _controller;
   late Future<void> _initializeControllerFuture;
-  // late VideoRecorder _videoRecorder;
 
   @override
   void initState() {
     super.initState();
     _initializeControllerFuture = _initializeCamera();
     SettingsManager.subscribeToSettingsChanges(_onSettingsChanged);
-    // _videoRecorder = VideoRecorder.instance;
-    // _videoRecorder.setup(context: context, key: cameraWidgetKey);
   }
 
   @override
   void dispose() {
-    SettingsManager.unsubscribeFromSettingsChanges(_onSettingsChanged);
-    _controller.dispose();
     super.dispose();
+    _controller.dispose();
+    SettingsManager.unsubscribeFromSettingsChanges(_onSettingsChanged);
   }
 
   void _onSettingsChanged(String settingName) async {
@@ -67,12 +64,10 @@ class CameraWidgetState extends State<CameraWidget> {
     _controller = await CameraWidget.createController();
     try {
       await _controller.initialize();
-      print("CONTROLLER INITIALIZED IN CAMERA WIDGET: $_controller");
       VideoRecorder.instance.setController(_controller);
       if (mounted) {
         setState(() {});
       }
-      print("CONTROLLER INITIALIZED IN CAMERA WIDGET: $_controller");
     } catch (e) {
       print('Error initializing camera: $e');
     }
@@ -98,7 +93,7 @@ class CameraWidgetState extends State<CameraWidget> {
         future: _initializeControllerFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.done) {
-            print("CameraWidget preview controller: $_controller");
+            print(_controller);
             return Stack(
               fit: StackFit.expand,
               alignment: AlignmentDirectional.bottomCenter,
