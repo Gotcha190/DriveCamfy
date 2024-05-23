@@ -1,3 +1,4 @@
+import 'package:camera/camera.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -44,6 +45,25 @@ class SettingsManager {
     });
   }
 
+  // Map for converting between String and ResolutionPreset
+  static const Map<String, ResolutionPreset> resolutionPresetMap = {
+    'Low': ResolutionPreset.low,
+    'Medium': ResolutionPreset.medium,
+    'High': ResolutionPreset.high,
+    'VeryHigh': ResolutionPreset.veryHigh,
+    'UltraHigh': ResolutionPreset.ultraHigh,
+    'Max': ResolutionPreset.max,
+  };
+
+  static const Map<ResolutionPreset, String> resolutionPresetReverseMap = {
+    ResolutionPreset.low: 'Low',
+    ResolutionPreset.medium: 'Medium',
+    ResolutionPreset.high: 'High',
+    ResolutionPreset.veryHigh: 'VeryHigh',
+    ResolutionPreset.ultraHigh: 'UltraHigh',
+    ResolutionPreset.max: 'Max',
+  };
+
   static void subscribeToSettingsChanges(ValueChanged<String> onChanged) {
     _listeners.add(onChanged);
   }
@@ -59,7 +79,7 @@ class SettingsManager {
   }
 
   // Default values
-  static const String _defaultCameraQuality = 'High';
+  static const ResolutionPreset _defaultCameraQuality = ResolutionPreset.max;
   static const bool _defaultFrontCameraEnabled = false;
   static const bool _defaultRecordSoundEnabled = true;
   static const bool _defaultGSensorEnabled = true;
@@ -109,10 +129,13 @@ class SettingsManager {
       _prefs?.getBool(keyRotationLocked) ?? _defaultRotationLocked;
 
   // Camera settings getters and setters
-  static String get cameraQuality =>
-      _prefs?.getString(keyCameraQuality) ?? _defaultCameraQuality;
-  static set cameraQuality(String value) {
-    _prefs?.setString(keyCameraQuality, value);
+  static ResolutionPreset get cameraQuality {
+    String? qualityString = _prefs?.getString(keyCameraQuality);
+    return resolutionPresetMap[qualityString] ?? _defaultCameraQuality;
+  }
+  static set cameraQuality(ResolutionPreset value) {
+    String qualityString = resolutionPresetReverseMap[value]!;
+    _prefs?.setString(keyCameraQuality, qualityString);
     _notifyListeners(keyCameraQuality);
   }
 

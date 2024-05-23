@@ -1,3 +1,4 @@
+import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:drive_camfy/utils/settings_manager.dart';
 
@@ -13,7 +14,7 @@ class SettingsViewState extends State<SettingsView> {
   late bool _frontCameraEnabled;
   late bool _recordSoundEnabled;
   late bool _gSensorEnabled;
-  late String _cameraQuality;
+  late ResolutionPreset _cameraQuality;
   late int _recordLength;
   late int _recordCount;
   late String _recordLocation;
@@ -42,6 +43,7 @@ class SettingsViewState extends State<SettingsView> {
       } else {
         SettingsManager.rotationUnlock();
       }
+      SettingsManager.cameraQuality = _cameraQuality;
       SettingsManager.frontCameraEnabled = _frontCameraEnabled;
       SettingsManager.recordSoundEnabled = _recordSoundEnabled;
       SettingsManager.gSensorEnabled = _gSensorEnabled;
@@ -105,18 +107,18 @@ class SettingsViewState extends State<SettingsView> {
       children: [
         ListTile(
           title: const Text('Camera Quality'),
-          trailing: DropdownButton<String>(
+          trailing: DropdownButton<ResolutionPreset>(
             value: _cameraQuality,
-            onChanged: (String? newValue) {
+            onChanged: (ResolutionPreset? newValue) {
               setState(() {
                 _cameraQuality = newValue!;
               });
             },
-            items: <String>['Low', 'Medium', 'High']
-                .map<DropdownMenuItem<String>>((String value) {
-              return DropdownMenuItem<String>(
+            items: ResolutionPreset.values
+                .map<DropdownMenuItem<ResolutionPreset>>((ResolutionPreset value) {
+              return DropdownMenuItem<ResolutionPreset>(
                 value: value,
-                child: Text(value),
+                child: Text(SettingsManager.resolutionPresetReverseMap[value]!),
               );
             }).toList(),
           ),

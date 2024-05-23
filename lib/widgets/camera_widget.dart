@@ -20,11 +20,12 @@ class CameraWidget extends StatefulWidget {
   }
 
   static Future<CameraController> createController() async {
+    print(SettingsManager.cameraQuality);
     final cameras = await availableCameras();
     final firstCamera = cameras.first;
     return CameraController(
       firstCamera,
-      ResolutionPreset.max,
+      SettingsManager.cameraQuality,
       enableAudio: SettingsManager.recordSoundEnabled,
     );
   }
@@ -39,6 +40,7 @@ class CameraWidgetState extends State<CameraWidget> {
   late CameraController _controller;
   late Future<void> _initializeControllerFuture;
   late bool _isControllerInitialized;
+  bool _isProcessingSettingsChange = false;
 
   @override
   void initState() {
@@ -56,18 +58,22 @@ class CameraWidgetState extends State<CameraWidget> {
   }
 
   void _onSettingsChanged(String settingName) async {
-    if (!_controller.value.isRecordingVideo &&
-        settingName == SettingsManager.keyRecordSoundEnabled) {
-      setState(() {
-        _isControllerInitialized = true;
-      });
-      _controller.dispose();
-      await reinitializeCamera();
+    if (_isProcessingSettingsChange || _controller.value.isRecordingVideo) {
+      return;
     }
+    _isProcessingSettingsChange = true;
+    switch (settingName) {
+      case SettingsManager.keyRecordSoundEnabled:
+      case SettingsManager.keyCameraQuality:
+        await reinitializeCamera();
+        break;
+    }
+    _isProcessingSettingsChange = false;
   }
 
   Future<void> _initializeCamera() async {
     _controller = await CameraWidget.createController();
+
     try {
       await _controller.initialize();
       setState(() {
@@ -81,10 +87,13 @@ class CameraWidgetState extends State<CameraWidget> {
   }
 
   Future<void> reinitializeCamera() async {
+    setState(() {
+      _isControllerInitialized = false;
+    });
+    _controller.dispose();
     widget.onControllerInitialized(false);
     setState(() {
       _initializeControllerFuture = _initializeCamera();
-      _isControllerInitialized = false;
     });
   }
 
@@ -96,28 +105,26 @@ class CameraWidgetState extends State<CameraWidget> {
 
   @override
   Widget build(BuildContext context) {
-    print("_isControllerInitialized: $_isControllerInitialized");
     return Scaffold(
-      backgroundColor: Colors.black,
-      body: _isControllerInitialized
-      ? FutureBuilder<void>(
-        future: _initializeControllerFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.done) {
-            return Stack(
-              fit: StackFit.expand,
-              alignment: AlignmentDirectional.bottomCenter,
-              children: [
-                CameraPreview(_controller),
-                const CameraControlButtonsWidget(),
-              ],
-            );
-          } else {
-            return const Center(child: CircularProgressIndicator());
-          }
-        },
-      )
-            : const Center(child: CircularProgressIndicator())
-    );
+        backgroundColor: Colors.black,
+        body: _isControllerInitialized
+            ? FutureBuilder<void>(
+                future: _initializeControllerFuture,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.done) {
+                    return Stack(
+                      fit: StackFit.expand,
+                      alignment: AlignmentDirectional.bottomCenter,
+                      children: [
+                        CameraPreview(_controller),
+                        const CameraControlButtonsWidget(),
+                      ],
+                    );
+                  } else {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                },
+              )
+            : const Center(child: CircularProgressIndicator()));
   }
 }
