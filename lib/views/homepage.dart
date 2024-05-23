@@ -59,8 +59,6 @@ class HomePageState extends State<HomePage> {
             _isAuto = SettingsManager.gSensorEnabled;
             _text = _isAuto ? 'auto' : 'manual';
             break;
-          default:
-            print("Homepage _onSettingsChanged run unknown setting");
         }
       });
     }

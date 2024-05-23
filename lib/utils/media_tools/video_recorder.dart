@@ -56,7 +56,10 @@ class VideoRecorder {
     if (!_controller.value.isRecordingVideo) return;
     switch (settingName) {
       case SettingsManager.keyRecordSoundEnabled:
-        await stopRecording(false);
+        await stopRecording(
+          cleanup: false,
+          shouldContinueRecording: true,
+        );
         await reinitializeCamera(_context);
         await recordRecursively(true);
         break;
@@ -66,13 +69,13 @@ class VideoRecorder {
       case SettingsManager.keyRecordCount:
         _recordCount = SettingsManager.recordCount;
         break;
-      default:
-        print("VideoRecorder _onSettingsChanged run unknown setting");
     }
   }
 
-  Future<void> recordRecursively(bool shouldContinueRecording) async {
-    _shouldContinueRecording = shouldContinueRecording;
+  Future<void> recordRecursively(bool? shouldContinueRecording) async {
+    if (shouldContinueRecording != null) {
+      _shouldContinueRecording = shouldContinueRecording;
+    }
     if (_recordMins > 0 && _recordCount >= 0) {
       if (!_controller.value.isInitialized) {
         print('Controller is not initialized.');
@@ -86,7 +89,8 @@ class VideoRecorder {
         }
         await Future.delayed(Duration(minutes: _recordMins));
         if (_controller.value.isRecordingVideo && !_isEmergencyRecording) {
-          await stopRecording(true);
+          await stopRecording(cleanup: true, shouldContinueRecording: true);
+          await recordRecursively(null);
         }
       }
     }
@@ -102,7 +106,10 @@ class VideoRecorder {
     await stopEmergencyRecording();
   }
 
-  Future<void> stopRecording(bool cleanup) async {
+  Future<void> stopRecording({
+    required bool cleanup,
+    required bool shouldContinueRecording,
+  }) async {
     try {
       if (_controller.value.isRecordingVideo) {
         XFile tempFile = await _controller.stopVideoRecording();
@@ -113,10 +120,8 @@ class VideoRecorder {
         await tempFile.saveTo(videoPath);
         File(tempFile.path).delete();
         recordingStateCallback?.call();
-        if (cleanup) {
-          _shouldContinueRecording = false;
-          await deleteOldRecordings();
-        }
+        if (cleanup) await deleteOldRecordings();
+        if (!shouldContinueRecording) _shouldContinueRecording = false;
       }
     } on CameraException catch (e) {
       print('Error stopping video recording: ${e.description}');

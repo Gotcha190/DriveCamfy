@@ -38,10 +38,12 @@ class CameraWidget extends StatefulWidget {
 class CameraWidgetState extends State<CameraWidget> {
   late CameraController _controller;
   late Future<void> _initializeControllerFuture;
+  late bool _isControllerInitialized;
 
   @override
   void initState() {
     super.initState();
+    _isControllerInitialized = false;
     _initializeControllerFuture = _initializeCamera();
     SettingsManager.subscribeToSettingsChanges(_onSettingsChanged);
   }
@@ -56,6 +58,9 @@ class CameraWidgetState extends State<CameraWidget> {
   void _onSettingsChanged(String settingName) async {
     if (!_controller.value.isRecordingVideo &&
         settingName == SettingsManager.keyRecordSoundEnabled) {
+      setState(() {
+        _isControllerInitialized = true;
+      });
       _controller.dispose();
       await reinitializeCamera();
     }
@@ -65,11 +70,11 @@ class CameraWidgetState extends State<CameraWidget> {
     _controller = await CameraWidget.createController();
     try {
       await _controller.initialize();
+      setState(() {
+        _isControllerInitialized = true;
+      });
       widget.onControllerInitialized(true);
       VideoRecorder.instance.setController(_controller);
-      if (mounted) {
-        setState(() {});
-      }
     } catch (e) {
       print('Error initializing camera: $e');
     }
@@ -79,6 +84,7 @@ class CameraWidgetState extends State<CameraWidget> {
     widget.onControllerInitialized(false);
     setState(() {
       _initializeControllerFuture = _initializeCamera();
+      _isControllerInitialized = false;
     });
   }
 
@@ -90,9 +96,11 @@ class CameraWidgetState extends State<CameraWidget> {
 
   @override
   Widget build(BuildContext context) {
+    print("_isControllerInitialized: $_isControllerInitialized");
     return Scaffold(
       backgroundColor: Colors.black,
-      body: FutureBuilder<void>(
+      body: _isControllerInitialized
+      ? FutureBuilder<void>(
         future: _initializeControllerFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.done) {
@@ -108,7 +116,8 @@ class CameraWidgetState extends State<CameraWidget> {
             return const Center(child: CircularProgressIndicator());
           }
         },
-      ),
+      )
+            : const Center(child: CircularProgressIndicator())
     );
   }
 }

@@ -135,7 +135,6 @@ class SettingsManager {
       _prefs?.getBool(keyGSensorEnabled) ?? _defaultGSensorEnabled;
   static set gSensorEnabled(bool value) {
     _prefs?.setBool(keyGSensorEnabled, value);
-    print("set gSensor value: $value");
     _notifyListeners(keyGSensorEnabled);
   }
 

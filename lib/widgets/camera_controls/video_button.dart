@@ -86,7 +86,7 @@ class _VideoButtonState extends State<VideoButton> {
           return;
         }
         if (_videoRecorder.controller.value.isRecordingVideo) {
-          await _videoRecorder.stopRecording(true);
+          await _videoRecorder.stopRecording(cleanup: true, shouldContinueRecording: false);
           if (mounted) {
             setState(() {});
           }
