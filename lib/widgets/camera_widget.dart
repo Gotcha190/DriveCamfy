@@ -20,14 +20,16 @@ class CameraWidget extends StatefulWidget {
   }
 
   static Future<CameraController> createController() async {
-    print(SettingsManager.cameraQuality);
     final cameras = await availableCameras();
     final firstCamera = cameras.first;
-    return CameraController(
+    CameraController controller = CameraController(
       firstCamera,
       SettingsManager.cameraQuality,
       enableAudio: SettingsManager.recordSoundEnabled,
+      imageFormatGroup: ImageFormatGroup.yuv420,
     );
+    await controller.setFlashMode(FlashMode.off);
+    return controller;
   }
 
   static void setController(BuildContext context, CameraController controller) {
@@ -73,7 +75,6 @@ class CameraWidgetState extends State<CameraWidget> {
 
   Future<void> _initializeCamera() async {
     _controller = await CameraWidget.createController();
-
     try {
       await _controller.initialize();
       setState(() {
