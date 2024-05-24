@@ -83,7 +83,7 @@ class VideoRecorder {
       }
       while (_shouldContinueRecording) {
         if (!_controller.value.isRecordingVideo) {
-          await controller.startVideoRecording();
+          await _controller.startVideoRecording();
           _currentClipStart = DateTime.now();
           recordingStateCallback?.call();
         }
@@ -142,7 +142,7 @@ class VideoRecorder {
 
   Future<void> deleteOldRecordings() async {
     List<File>? existingClips = await GalleryHelper.getVideos();
-    if (existingClips!.length > _recordCount) {
+    if (existingClips.length > _recordCount) {
       existingClips
           .sort((a, b) => a.lastModifiedSync().compareTo(b.lastModifiedSync()));
       for (int i = 0; i < existingClips.length - _recordCount; i++) {

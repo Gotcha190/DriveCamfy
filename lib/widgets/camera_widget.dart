@@ -28,6 +28,7 @@ class CameraWidget extends StatefulWidget {
       enableAudio: SettingsManager.recordSoundEnabled,
       imageFormatGroup: ImageFormatGroup.yuv420,
     );
+    await controller.initialize();
     await controller.setFlashMode(FlashMode.off);
     return controller;
   }
@@ -39,9 +40,9 @@ class CameraWidget extends StatefulWidget {
 }
 
 class CameraWidgetState extends State<CameraWidget> {
-  late CameraController _controller;
+  CameraController? _controller;
   late Future<void> _initializeControllerFuture;
-  late bool _isControllerInitialized;
+  bool _isControllerInitialized = false;
   bool _isProcessingSettingsChange = false;
 
   @override
@@ -55,12 +56,13 @@ class CameraWidgetState extends State<CameraWidget> {
   @override
   void dispose() {
     super.dispose();
-    _controller.dispose();
+    _controller?.dispose();
     SettingsManager.unsubscribeFromSettingsChanges(_onSettingsChanged);
   }
 
   void _onSettingsChanged(String settingName) async {
-    if (_isProcessingSettingsChange || _controller.value.isRecordingVideo) {
+    if (_isProcessingSettingsChange ||
+        (_controller?.value.isRecordingVideo ?? false)) {
       return;
     }
     _isProcessingSettingsChange = true;
@@ -75,23 +77,18 @@ class CameraWidgetState extends State<CameraWidget> {
 
   Future<void> _initializeCamera() async {
     _controller = await CameraWidget.createController();
-    try {
-      await _controller.initialize();
-      setState(() {
-        _isControllerInitialized = true;
-      });
-      widget.onControllerInitialized(true);
-      VideoRecorder.instance.setController(_controller);
-    } catch (e) {
-      print('Error initializing camera: $e');
-    }
+    setState(() {
+      _isControllerInitialized = true;
+    });
+    widget.onControllerInitialized(true);
+    VideoRecorder.instance.setController(_controller!);
   }
 
   Future<void> reinitializeCamera() async {
     setState(() {
       _isControllerInitialized = false;
     });
-    _controller.dispose();
+    await _controller?.dispose();
     widget.onControllerInitialized(false);
     setState(() {
       _initializeControllerFuture = _initializeCamera();
@@ -107,25 +104,27 @@ class CameraWidgetState extends State<CameraWidget> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        backgroundColor: Colors.black,
-        body: _isControllerInitialized
-            ? FutureBuilder<void>(
-                future: _initializeControllerFuture,
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.done) {
-                    return Stack(
-                      fit: StackFit.expand,
-                      alignment: AlignmentDirectional.bottomCenter,
-                      children: [
-                        CameraPreview(_controller),
-                        const CameraControlButtonsWidget(),
-                      ],
-                    );
-                  } else {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-                },
-              )
-            : const Center(child: CircularProgressIndicator()));
+      backgroundColor: Colors.black,
+      body: _isControllerInitialized
+          ? FutureBuilder<void>(
+              future: _initializeControllerFuture,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.done &&
+                    _isControllerInitialized) {
+                  return Stack(
+                    fit: StackFit.expand,
+                    alignment: AlignmentDirectional.bottomCenter,
+                    children: [
+                      CameraPreview(_controller!),
+                      const CameraControlButtonsWidget(),
+                    ],
+                  );
+                } else {
+                  return const Center(child: CircularProgressIndicator());
+                }
+              },
+            )
+          : const Center(child: CircularProgressIndicator()),
+    );
   }
 }
