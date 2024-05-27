@@ -74,7 +74,7 @@ class HomePageState extends State<HomePage> {
           // CameraWidget jako główny widok
           CameraWidget(
               key: cameraWidgetKey,
-              onControllerInitialized: _onCameraInitialized),
+              onControllerInitializationChanged: _onCameraInitialized),
           // Przyciski nad CameraWidget
           Positioned(
             top: 40,

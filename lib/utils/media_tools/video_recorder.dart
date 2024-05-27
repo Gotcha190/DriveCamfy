@@ -27,6 +27,7 @@ class VideoRecorder {
   late int _recordMins;
   late int _recordCount;
   bool _shouldContinueRecording = false;
+  bool _isProcessingSettingsChange = false;
 
   bool get isEmergencyRecording => _isEmergencyRecording;
   bool _isEmergencyRecording = false;
@@ -53,22 +54,32 @@ class VideoRecorder {
   }
 
   Future<void> _onSettingsChanged(String settingName) async {
-    if (!_controller.value.isRecordingVideo) return;
-    switch (settingName) {
-      case SettingsManager.keyRecordSoundEnabled:
-        await stopRecording(
-          cleanup: false,
-          shouldContinueRecording: true,
-        );
-        await reinitializeCamera(_context);
-        await recordRecursively(true);
-        break;
-      case SettingsManager.keyRecordLength:
-        _recordMins = SettingsManager.recordLength;
-        break;
-      case SettingsManager.keyRecordCount:
-        _recordCount = SettingsManager.recordCount;
-        break;
+    if (_isProcessingSettingsChange || (!_controller.value.isRecordingVideo)) {
+      return;
+    }
+    _isProcessingSettingsChange = true;
+    try {
+      switch (settingName) {
+        case SettingsManager.keyRecordSoundEnabled:
+        case SettingsManager.keyCameraQuality:
+          await stopRecording(
+            cleanup: false,
+            shouldContinueRecording: true,
+          );
+          await reinitializeCamera(_context);
+          await recordRecursively(true);
+          break;
+        case SettingsManager.keyRecordLength:
+          _recordMins = SettingsManager.recordLength;
+          break;
+        case SettingsManager.keyRecordCount:
+          _recordCount = SettingsManager.recordCount;
+          break;
+      }
+    } catch (e) {
+      print('Error in _onSettingsChanged: $e');
+    } finally {
+      _isProcessingSettingsChange = false;
     }
   }
 
@@ -152,13 +163,18 @@ class VideoRecorder {
   }
 
   Future<void> reinitializeCamera(BuildContext context) async {
-    if (_controller.value.isRecordingVideo) {
-      await _controller.stopVideoRecording();
-      recordingStateCallback?.call();
+    try {
+      if (_controller.value.isRecordingVideo) {
+        await _controller.stopVideoRecording();
+        recordingStateCallback?.call();
+      }
+      await _controller.dispose();
+      _controller = await CameraWidget.createController();
+      CameraWidget.setController(context, _controller);
+    } catch (e) {
+      print('Error in reinitializeCamera: ${e}');
+    } finally {
+      _isProcessingSettingsChange = false; // Dodane tutaj
     }
-    await _controller.dispose();
-    _controller = await CameraWidget.createController();
-    await _controller.initialize();
-    CameraWidget.setController(context, _controller);
   }
 }

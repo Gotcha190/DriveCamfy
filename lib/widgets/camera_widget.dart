@@ -8,8 +8,9 @@ final GlobalKey<CameraWidgetState> cameraWidgetKey =
     GlobalKey<CameraWidgetState>();
 
 class CameraWidget extends StatefulWidget {
-  final Function(bool) onControllerInitialized;
-  const CameraWidget({super.key, required this.onControllerInitialized});
+  final Function(bool) onControllerInitializationChanged;
+  const CameraWidget(
+      {super.key, required this.onControllerInitializationChanged});
 
   @override
   CameraWidgetState createState() => CameraWidgetState();
@@ -35,11 +36,13 @@ class CameraWidget extends StatefulWidget {
 
   static void setController(BuildContext context, CameraController controller) {
     final state = context.findAncestorStateOfType<CameraWidgetState>();
+    state?._isControllerInitialized = false;
     state?._setController(controller);
   }
 }
 
-class CameraWidgetState extends State<CameraWidget> {
+class CameraWidgetState extends State<CameraWidget>
+    with WidgetsBindingObserver {
   CameraController? _controller;
   late Future<void> _initializeControllerFuture;
   bool _isControllerInitialized = false;
@@ -55,9 +58,35 @@ class CameraWidgetState extends State<CameraWidget> {
 
   @override
   void dispose() {
-    super.dispose();
+    WidgetsBinding.instance.removeObserver(this);
     _controller?.dispose();
     SettingsManager.unsubscribeFromSettingsChanges(_onSettingsChanged);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (_controller == null || !_controller!.value.isInitialized) {
+      return;
+    }
+
+    if (state == AppLifecycleState.inactive) {
+      setState(() {
+        _isControllerInitialized = false;
+      });
+      _controller?.dispose();
+    } else if (state == AppLifecycleState.resumed) {
+      setState(() {
+        _initializeControllerFuture = _initializeCamera();
+      });
+    }
+  }
+
+  void _setController(CameraController controller) {
+    setState(() {
+      _controller = controller;
+      _isControllerInitialized = true;
+    });
   }
 
   void _onSettingsChanged(String settingName) async {
@@ -69,6 +98,10 @@ class CameraWidgetState extends State<CameraWidget> {
     switch (settingName) {
       case SettingsManager.keyRecordSoundEnabled:
       case SettingsManager.keyCameraQuality:
+        widget.onControllerInitializationChanged(false);
+        setState(() {
+          _isControllerInitialized = false;
+        });
         await reinitializeCamera();
         break;
     }
@@ -80,7 +113,7 @@ class CameraWidgetState extends State<CameraWidget> {
     setState(() {
       _isControllerInitialized = true;
     });
-    widget.onControllerInitialized(true);
+    widget.onControllerInitializationChanged(true);
     VideoRecorder.instance.setController(_controller!);
   }
 
@@ -89,15 +122,9 @@ class CameraWidgetState extends State<CameraWidget> {
       _isControllerInitialized = false;
     });
     await _controller?.dispose();
-    widget.onControllerInitialized(false);
+    widget.onControllerInitializationChanged(false);
     setState(() {
       _initializeControllerFuture = _initializeCamera();
-    });
-  }
-
-  void _setController(CameraController controller) {
-    setState(() {
-      _controller = controller;
     });
   }
 
