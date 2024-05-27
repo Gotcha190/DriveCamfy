@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 typedef RecordingStateCallback = void Function();
+typedef ControllerStateCallback = void Function(bool isInitialized);
 
 class VideoRecorder {
   static final VideoRecorder _instance = VideoRecorder._internal();
@@ -33,6 +34,11 @@ class VideoRecorder {
   bool _isEmergencyRecording = false;
 
   RecordingStateCallback? recordingStateCallback;
+  ControllerStateCallback? controllerStateCallback;
+
+  void setControllerStateCallback(ControllerStateCallback callback) {
+    controllerStateCallback = callback;
+  }
 
   CameraController get controller => _controller;
   void setController(CameraController controller) {
@@ -62,6 +68,7 @@ class VideoRecorder {
       switch (settingName) {
         case SettingsManager.keyRecordSoundEnabled:
         case SettingsManager.keyCameraQuality:
+          controllerStateCallback?.call(false);
           await stopRecording(
             cleanup: false,
             shouldContinueRecording: true,
@@ -174,7 +181,8 @@ class VideoRecorder {
     } catch (e) {
       print('Error in reinitializeCamera: ${e}');
     } finally {
-      _isProcessingSettingsChange = false; // Dodane tutaj
+      _isProcessingSettingsChange = false;
+      controllerStateCallback?.call(true);
     }
   }
 }

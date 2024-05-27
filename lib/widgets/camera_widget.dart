@@ -54,6 +54,7 @@ class CameraWidgetState extends State<CameraWidget>
     _isControllerInitialized = false;
     _initializeControllerFuture = _initializeCamera();
     SettingsManager.subscribeToSettingsChanges(_onSettingsChanged);
+    VideoRecorder.instance.setControllerStateCallback(_onControllerChanged);
   }
 
   @override
@@ -87,6 +88,11 @@ class CameraWidgetState extends State<CameraWidget>
       _controller = controller;
       _isControllerInitialized = true;
     });
+  }
+
+  void _onControllerChanged(bool isInitialized) {
+    print("TEST");
+    widget.onControllerInitializationChanged(isInitialized);
   }
 
   void _onSettingsChanged(String settingName) async {

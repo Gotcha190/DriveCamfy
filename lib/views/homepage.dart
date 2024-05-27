@@ -66,6 +66,7 @@ class HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    print("HOMEPAGE ISCAMERAINITIALIZED: $_isCameraInitialized");
     double iconSize = 60;
     return Scaffold(
       backgroundColor: Colors.black,
