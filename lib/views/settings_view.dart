@@ -10,10 +10,14 @@ class SettingsView extends StatefulWidget {
 }
 
 class SettingsViewState extends State<SettingsView> {
+  late TextEditingController _accelerationController;
+  late TextEditingController _speedController;
   late bool _rotationLocked;
   late bool _frontCameraEnabled;
   late bool _recordSoundEnabled;
-  late bool _gSensorEnabled;
+  late bool _emergencyDetectionEnabled;
+  late double _accelerationThreshold;
+  late double _speedThreshold;
   late ResolutionPreset _cameraQuality;
   late int _recordLength;
   late int _recordCount;
@@ -26,12 +30,16 @@ class SettingsViewState extends State<SettingsView> {
     _rotationLocked = SettingsManager.rotationLocked;
     _frontCameraEnabled = SettingsManager.frontCameraEnabled;
     _recordSoundEnabled = SettingsManager.recordSoundEnabled;
-    _gSensorEnabled = SettingsManager.gSensorEnabled;
+    _emergencyDetectionEnabled = SettingsManager.emergencyDetectionEnabled;
+    _accelerationThreshold = SettingsManager.accelerationThreshold;
+    _speedThreshold = SettingsManager.speedThreshold;
     _cameraQuality = SettingsManager.cameraQuality;
     _recordLength = SettingsManager.recordLength;
     _recordCount = SettingsManager.recordCount;
     _recordLocation = SettingsManager.recordLocation;
     _photoLocation = SettingsManager.photoLocation;
+    _accelerationController = TextEditingController(text: _accelerationThreshold.toString());
+    _speedController = TextEditingController(text: _speedThreshold.toString());
   }
 
   @override
@@ -46,8 +54,12 @@ class SettingsViewState extends State<SettingsView> {
       SettingsManager.cameraQuality = _cameraQuality;
       SettingsManager.frontCameraEnabled = _frontCameraEnabled;
       SettingsManager.recordSoundEnabled = _recordSoundEnabled;
-      SettingsManager.gSensorEnabled = _gSensorEnabled;
+      SettingsManager.emergencyDetectionEnabled = _emergencyDetectionEnabled;
+      SettingsManager.accelerationThreshold = _accelerationThreshold;
+      SettingsManager.speedThreshold = _speedThreshold;
     });
+    _accelerationController.dispose();
+    _speedController.dispose();
     super.dispose();
   }
 
@@ -59,10 +71,12 @@ class SettingsViewState extends State<SettingsView> {
       ),
       body: ListView(
         children: [
-          _buildCategoryHeader('App Settings'),
+          _buildCategoryHeader('App'),
           _buildAppSettings(),
-          _buildCategoryHeader('Camera Settings'),
+          _buildCategoryHeader('Camera'),
           _buildCameraSettings(),
+          _buildCategoryHeader('Emergency Detection'),
+          _buildEmergencyDetection(),
           _buildCategoryHeader('Storage'),
           _buildStorageSettings(),
         ],
@@ -88,7 +102,7 @@ class SettingsViewState extends State<SettingsView> {
     return Column(
       children: [
         ListTile(
-          title: const Text('Screen Rotation'),
+          title: const Text('Screen Rotation Lock'),
           trailing: Switch(
             value: _rotationLocked,
             onChanged: (value) {
@@ -145,20 +159,92 @@ class SettingsViewState extends State<SettingsView> {
             },
           ),
         ),
+      ],
+    );
+  }
+
+  Widget _buildEmergencyDetection() {
+    return Column(
+      children: [
         ListTile(
-          title: const Text('G-Sensor'),
+          title: const Text('Automatic emergency detection'),
           trailing: Switch(
-            value: _gSensorEnabled,
+            value: _emergencyDetectionEnabled,
             onChanged: (value) {
               setState(() {
-                _gSensorEnabled = value;
+                _emergencyDetectionEnabled = value;
               });
             },
+          ),
+        ),
+        ListTile(
+          title: const Text('Acceleration Threshold'),
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(
+                width: 100,
+                child: TextFormField(
+                  controller: _accelerationController, // Kontroler dla pola tekstowego
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true), // Ustaw typ klawiatury na numeryczną
+                  decoration: const InputDecoration(
+                    hintText: 'Enter acceleration threshold', // Opcjonalny tekst podpowiedzi
+                  ),
+                  onChanged: (value) {
+                    setState(() {
+                      _accelerationThreshold = double.tryParse(value) ?? _accelerationThreshold; // Aktualizacja wartości _accelerationThreshold
+                    });
+                  },
+                ),
+              ),
+              IconButton(
+                icon: Icon(Icons.restore),
+                onPressed: () {
+                  setState(() {
+                    _accelerationThreshold = SettingsManager.defaultAccelerationThreshold; // Przywróć domyślną wartość progową przyspieszenia
+                    _accelerationController.text = SettingsManager.defaultAccelerationThreshold.toString(); // Ustaw wartość pola tekstowego na domyślną
+                  });
+                },
+              ),
+            ],
+          ),
+        ),
+        ListTile(
+          title: const Text('Speed Threshold'),
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(
+                width: 100,
+                child: TextFormField(
+                  controller: _speedController, // Kontroler dla pola tekstowego
+                  keyboardType: const TextInputType.numberWithOptions(decimal: true), // Ustaw typ klawiatury na numeryczną
+                  decoration: const InputDecoration(
+                    hintText: 'Enter speed threshold', // Opcjonalny tekst podpowiedzi
+                  ),
+                  onChanged: (value) {
+                    setState(() {
+                      _speedThreshold = double.tryParse(value) ?? _speedThreshold; // Aktualizacja wartości progowej prędkości
+                    });
+                  },
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.restore),
+                onPressed: () {
+                  setState(() {
+                    _speedThreshold = SettingsManager.defaultSpeedThreshold; // Przywróć domyślną wartość progową prędkości
+                    _speedController.text = SettingsManager.defaultSpeedThreshold.toString(); // Ustaw wartość pola tekstowego na domyślną
+                  });
+                },
+              ),
+            ],
           ),
         ),
       ],
     );
   }
+
 
   Widget _buildStorageSettings() {
     return Column(
@@ -182,7 +268,7 @@ class SettingsViewState extends State<SettingsView> {
           ),
         ),
         ListTile(
-          title: const Text('Max Record Size'),
+          title: const Text('Max Record Count'),
           trailing: DropdownButton<int>(
             value: _recordCount,
             onChanged: (int? newValue) {
@@ -190,7 +276,7 @@ class SettingsViewState extends State<SettingsView> {
                 _recordCount = newValue!;
               });
             },
-            items: <int>[5, 10, 15, 20].map<DropdownMenuItem<int>>((int value) {
+            items: <int>[5, 10, 15, 20, 30, 40, 50].map<DropdownMenuItem<int>>((int value) {
               return DropdownMenuItem<int>(
                 value: value,
                 child: Text(value.toString()),

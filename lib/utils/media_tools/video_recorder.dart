@@ -1,5 +1,7 @@
 import 'dart:io';
 import 'package:camera/camera.dart';
+import 'package:drive_camfy/utils/emergency_detection.dart';
+import 'package:sensors_plus/sensors_plus.dart';
 import 'package:drive_camfy/utils/app_directory.dart';
 import 'package:drive_camfy/utils/media_tools/gallery_helper.dart';
 import 'package:drive_camfy/utils/settings_manager.dart';
@@ -23,10 +25,12 @@ class VideoRecorder {
 
   late BuildContext _context;
   late CameraController _controller;
+  late EmergencyDetection emergencyDetection;
   late DateTime _currentClipStart;
   late DateTime _emergencyClipStart;
   late int _recordMins;
   late int _recordCount;
+  late bool _autoEmergency;
   bool _shouldContinueRecording = false;
   bool _isProcessingSettingsChange = false;
 
@@ -35,6 +39,10 @@ class VideoRecorder {
 
   RecordingStateCallback? recordingStateCallback;
   ControllerStateCallback? controllerStateCallback;
+
+  void initializeEmergencyDetection() {
+    emergencyDetection = EmergencyDetection(this);
+  }
 
   void setControllerStateCallback(ControllerStateCallback callback) {
     controllerStateCallback = callback;
@@ -55,8 +63,10 @@ class VideoRecorder {
     _context = context;
     _recordMins = SettingsManager.recordLength;
     _recordCount = SettingsManager.recordCount;
+    _autoEmergency = SettingsManager.emergencyDetectionEnabled;
     SettingsManager.subscribeToSettingsChanges(_onSettingsChanged);
     recordingStateCallback = callback;
+    initializeEmergencyDetection();
   }
 
   Future<void> _onSettingsChanged(String settingName) async {
@@ -82,6 +92,20 @@ class VideoRecorder {
         case SettingsManager.keyRecordCount:
           _recordCount = SettingsManager.recordCount;
           break;
+        case SettingsManager.keyEmergencyDetectionEnabled:
+          _autoEmergency = SettingsManager.emergencyDetectionEnabled;
+          if (!_autoEmergency) {
+            emergencyDetection.startMonitoringEmergencyBrake(false);
+          }
+          if (_autoEmergency) {
+            initializeEmergencyDetection();
+            emergencyDetection.startMonitoringEmergencyBrake(true);
+          }
+          break;
+        case SettingsManager.keyAccelerationThreshold:
+        case SettingsManager.keySpeedThreshold:
+          initializeEmergencyDetection();
+          break;
       }
     } catch (e) {
       print('Error in _onSettingsChanged: $e');
@@ -102,6 +126,9 @@ class VideoRecorder {
       while (_shouldContinueRecording) {
         if (!_controller.value.isRecordingVideo) {
           await _controller.startVideoRecording();
+          if (_autoEmergency) {
+            emergencyDetection.startMonitoringEmergencyBrake(true);
+          }
           _currentClipStart = DateTime.now();
           recordingStateCallback?.call();
         }
@@ -115,6 +142,7 @@ class VideoRecorder {
   }
 
   Future<void> startEmergencyRecording() async {
+    print("EMERGENCY");
     _isEmergencyRecording = true;
     _emergencyClipStart = DateTime.now();
     Duration timeDifference = _emergencyClipStart.difference(_currentClipStart);
@@ -139,7 +167,10 @@ class VideoRecorder {
         File(tempFile.path).delete();
         recordingStateCallback?.call();
         if (cleanup) await deleteOldRecordings();
-        if (!shouldContinueRecording) _shouldContinueRecording = false;
+        if (!shouldContinueRecording) {
+          _shouldContinueRecording = false;
+          emergencyDetection.startMonitoringEmergencyBrake(false);
+        }
       }
     } on CameraException catch (e) {
       print('Error stopping video recording: ${e.description}');

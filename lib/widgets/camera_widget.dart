@@ -91,7 +91,6 @@ class CameraWidgetState extends State<CameraWidget>
   }
 
   void _onControllerChanged(bool isInitialized) {
-    print("TEST");
     widget.onControllerInitializationChanged(isInitialized);
   }
 
@@ -109,6 +108,12 @@ class CameraWidgetState extends State<CameraWidget>
           _isControllerInitialized = false;
         });
         await reinitializeCamera();
+        break;
+      case SettingsManager.keyEmergencyDetectionEnabled:
+      case SettingsManager.keyAccelerationThreshold:
+      case SettingsManager.keySpeedThreshold:
+        VideoRecorder.instance.initializeEmergencyDetection();
+
         break;
     }
     _isProcessingSettingsChange = false;

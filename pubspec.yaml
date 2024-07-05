@@ -48,6 +48,8 @@ dependencies:
   video_thumbnail: ^0.5.3
   visibility_detector: ^0.4.0+2
   shared_preferences: ^2.2.3
+  sensors_plus: ^5.0.1
+  location: ^6.0.2
 
 dev_dependencies:
   flutter_test:

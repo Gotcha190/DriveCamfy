@@ -27,7 +27,7 @@ class HomePageState extends State<HomePage> {
     super.initState();
     _isMuted = !SettingsManager.recordSoundEnabled;
     _isRotationLocked = SettingsManager.rotationLocked;
-    _isAuto = SettingsManager.gSensorEnabled;
+    _isAuto = SettingsManager.emergencyDetectionEnabled;
     _text = _isAuto ? 'auto' : 'manual';
     SettingsListener.startListening(_onSettingsChanged);
   }
@@ -55,8 +55,8 @@ class HomePageState extends State<HomePage> {
           case SettingsManager.keyRotationLocked:
             _isRotationLocked = SettingsManager.rotationLocked;
             break;
-          case SettingsManager.keyGSensorEnabled:
-            _isAuto = SettingsManager.gSensorEnabled;
+          case SettingsManager.keyEmergencyDetectionEnabled:
+            _isAuto = SettingsManager.emergencyDetectionEnabled;
             _text = _isAuto ? 'auto' : 'manual';
             break;
         }
@@ -66,7 +66,6 @@ class HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    print("HOMEPAGE ISCAMERAINITIALIZED: $_isCameraInitialized");
     double iconSize = 60;
     return Scaffold(
       backgroundColor: Colors.black,
@@ -129,7 +128,7 @@ class HomePageState extends State<HomePage> {
                                 _text = temp ? 'manual' : 'auto';
                                 setState(() {
                                   _isAuto = temp;
-                                  SettingsManager.gSensorEnabled = _isAuto;
+                                  SettingsManager.emergencyDetectionEnabled = _isAuto;
                                 });
                               }
                             : () {},

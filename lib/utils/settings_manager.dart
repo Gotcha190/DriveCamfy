@@ -23,7 +23,9 @@ class SettingsManager {
       keyCameraQuality: _defaultCameraQuality,
       keyFrontCameraEnabled: _defaultFrontCameraEnabled,
       keyRecordSoundEnabled: _defaultRecordSoundEnabled,
-      keyGSensorEnabled: _defaultGSensorEnabled,
+      keyEmergencyDetectionEnabled: _defaultEmergencyDetectionEnabled,
+      keyAccelerationThreshold: _defaultAccelerationThreshold,
+      keySpeedThreshold: _defaultSpeedThreshold,
       keyRecordLength: _defaultRecordLength,
       keyRecordCount: _defaultRecordCount,
       keyRecordLocation: _defaultRecordLocation,
@@ -39,6 +41,8 @@ class SettingsManager {
           _prefs?.setBool(key, value);
         } else if (value is int) {
           _prefs?.setInt(key, value);
+        } else if (value is double){
+          _prefs?.setDouble(key, value);
         }
         // Dodaj tutaj obsługę innych typów preferencji
       }
@@ -82,12 +86,14 @@ class SettingsManager {
   static const ResolutionPreset _defaultCameraQuality = ResolutionPreset.max;
   static const bool _defaultFrontCameraEnabled = false;
   static const bool _defaultRecordSoundEnabled = true;
-  static const bool _defaultGSensorEnabled = true;
+  static const bool _defaultEmergencyDetectionEnabled = true;
+  static const double _defaultAccelerationThreshold = 15.0;
+  static const double _defaultSpeedThreshold = 10.0;
   static const bool _defaultRotationLocked = false;
   static const int _defaultRecordLength = 1;
   static const int _defaultRecordCount = 5;
-  static const String _defaultRecordLocation = 'Internal';
-  static const String _defaultPhotoLocation = 'Internal';
+  static const String _defaultRecordLocation = 'External';
+  static const String _defaultPhotoLocation = 'External';
 
   // Screen rotation
   static const String keyRotationLocked = 'rotation_locked';
@@ -96,7 +102,11 @@ class SettingsManager {
   static const String keyCameraQuality = 'camera_quality';
   static const String keyFrontCameraEnabled = 'front_camera_enabled';
   static const String keyRecordSoundEnabled = 'record_sound_enabled';
-  static const String keyGSensorEnabled = 'gsensor_enabled';
+
+  // Emergency detection settings
+  static const String keyEmergencyDetectionEnabled = 'emergency_detection_enabled';
+  static const String keyAccelerationThreshold = 'acceleration_threshold';
+  static const String keySpeedThreshold = 'speed_threshold';
 
   // Storage settings
   static const String keyRecordLength = 'record_length';
@@ -154,11 +164,27 @@ class SettingsManager {
     _notifyListeners(keyRecordSoundEnabled);
   }
 
-  static bool get gSensorEnabled =>
-      _prefs?.getBool(keyGSensorEnabled) ?? _defaultGSensorEnabled;
-  static set gSensorEnabled(bool value) {
-    _prefs?.setBool(keyGSensorEnabled, value);
-    _notifyListeners(keyGSensorEnabled);
+  static bool get emergencyDetectionEnabled =>
+      _prefs?.getBool(keyEmergencyDetectionEnabled) ?? _defaultEmergencyDetectionEnabled;
+  static set emergencyDetectionEnabled(bool value) {
+    _prefs?.setBool(keyEmergencyDetectionEnabled, value);
+    _notifyListeners(keyEmergencyDetectionEnabled);
+  }
+
+  static double get accelerationThreshold =>
+      _prefs?.getDouble(keyAccelerationThreshold) ?? _defaultAccelerationThreshold;
+  static double get defaultAccelerationThreshold => _defaultAccelerationThreshold;
+  static set accelerationThreshold(double value) {
+    _prefs?.setDouble(keyAccelerationThreshold, value);
+    _notifyListeners(keyAccelerationThreshold);
+  }
+
+  static double get speedThreshold =>
+      _prefs?.getDouble(keySpeedThreshold) ?? _defaultSpeedThreshold;
+  static double get defaultSpeedThreshold => _defaultSpeedThreshold;
+  static set speedThreshold(double value) {
+    _prefs?.setDouble(keySpeedThreshold, value);
+    _notifyListeners(keySpeedThreshold);
   }
 
   // Storage settings getters and setters
