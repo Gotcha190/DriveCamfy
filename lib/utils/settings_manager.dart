@@ -4,24 +4,58 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class SettingsManager {
   static SharedPreferences? _prefs;
+  static List<CameraDescription> _availableCameras = [];
 
-  // Methods to subscribe and unsubscribe to changes in settings
-  static final List<ValueChanged<String>> _listeners = [];
+  // Settings keys
+  static const String keyRotationLocked = 'rotation_locked';
+  static const String keySelectedCamera = 'selected_camera';
+  static const String keyCameraQuality = 'camera_quality';
+  static const String keyRecordSoundEnabled = 'record_sound_enabled';
+  static const String keyEmergencyDetectionEnabled =
+      'emergency_detection_enabled';
+  static const String keyAccelerationThreshold = 'acceleration_threshold';
+  static const String keySpeedThreshold = 'speed_threshold';
+  static const String keyRecordLength = 'record_length';
+  static const String keyRecordCount = 'record_count';
+  static const String keyRecordLocation = 'record_location';
+  static const String keyPhotoLocation = 'photo_location';
 
+  // Default values
+  static const ResolutionPreset _defaultCameraQuality = ResolutionPreset.max;
+  static const int _defaultSelectedCameraIndex = 0;
+  static const bool _defaultRecordSoundEnabled = true;
+  static const bool _defaultEmergencyDetectionEnabled = true;
+  static const double _defaultAccelerationThreshold = 15.0;
+  static const double _defaultSpeedThreshold = 10.0;
+  static const bool _defaultRotationLocked = false;
+  static const int _defaultRecordLength = 1;
+  static const int _defaultRecordCount = 5;
+  static const String _defaultRecordLocation = 'External';
+  static const String _defaultPhotoLocation = 'External';
+
+  // Initialization of SharedPreferences and available cameras
   static Future<void> init() async {
     if (_prefs == null) {
       await _initPrefs();
     }
+
+    _availableCameras = await availableCameras();
+
+    if (_availableCameras.isNotEmpty &&
+        !_prefs!.containsKey(keySelectedCamera)) {
+      selectedCameraIndex = _defaultSelectedCameraIndex;
+    }
   }
 
+  // Initialization of SharedPreferences with default values
   static Future<void> _initPrefs() async {
     _prefs = await SharedPreferences.getInstance();
 
-    // Mapa zawierająca klucze i ich domyślne wartości
+    // Map of default values
     Map<String, dynamic> defaultValues = {
       keyRotationLocked: _defaultRotationLocked,
+      keySelectedCamera: _defaultSelectedCameraIndex,
       keyCameraQuality: _defaultCameraQuality,
-      keyFrontCameraEnabled: _defaultFrontCameraEnabled,
       keyRecordSoundEnabled: _defaultRecordSoundEnabled,
       keyEmergencyDetectionEnabled: _defaultEmergencyDetectionEnabled,
       keyAccelerationThreshold: _defaultAccelerationThreshold,
@@ -32,7 +66,6 @@ class SettingsManager {
       keyPhotoLocation: _defaultPhotoLocation,
     };
 
-    // Iteracja przez mapę i ustawienie domyślnych wartości, jeśli nie są jeszcze ustawione
     defaultValues.forEach((key, value) {
       if (!_prefs!.containsKey(key)) {
         if (value is String) {
@@ -41,12 +74,28 @@ class SettingsManager {
           _prefs?.setBool(key, value);
         } else if (value is int) {
           _prefs?.setInt(key, value);
-        } else if (value is double){
+        } else if (value is double) {
           _prefs?.setDouble(key, value);
         }
-        // Dodaj tutaj obsługę innych typów preferencji
       }
     });
+  }
+
+  // Methods to subscribe and unsubscribe to changes in settings
+  static final List<ValueChanged<String>> _listeners = [];
+
+  static void subscribeToSettingsChanges(ValueChanged<String> onChanged) {
+    _listeners.add(onChanged);
+  }
+
+  static void unsubscribeFromSettingsChanges(ValueChanged<String> onChanged) {
+    _listeners.remove(onChanged);
+  }
+
+  static void _notifyListeners(String settingName) {
+    for (var listener in _listeners) {
+      listener(settingName);
+    }
   }
 
   // Map for converting between String and ResolutionPreset
@@ -67,52 +116,6 @@ class SettingsManager {
     ResolutionPreset.ultraHigh: 'UltraHigh',
     ResolutionPreset.max: 'Max',
   };
-
-  static void subscribeToSettingsChanges(ValueChanged<String> onChanged) {
-    _listeners.add(onChanged);
-  }
-
-  static void unsubscribeFromSettingsChanges(ValueChanged<String> onChanged) {
-    _listeners.remove(onChanged);
-  }
-
-  static void _notifyListeners(String settingName) {
-    for (var listener in _listeners) {
-      listener(settingName);
-    }
-  }
-
-  // Default values
-  static const ResolutionPreset _defaultCameraQuality = ResolutionPreset.max;
-  static const bool _defaultFrontCameraEnabled = false;
-  static const bool _defaultRecordSoundEnabled = true;
-  static const bool _defaultEmergencyDetectionEnabled = true;
-  static const double _defaultAccelerationThreshold = 15.0;
-  static const double _defaultSpeedThreshold = 10.0;
-  static const bool _defaultRotationLocked = false;
-  static const int _defaultRecordLength = 1;
-  static const int _defaultRecordCount = 5;
-  static const String _defaultRecordLocation = 'External';
-  static const String _defaultPhotoLocation = 'External';
-
-  // Screen rotation
-  static const String keyRotationLocked = 'rotation_locked';
-
-  // Camera settings
-  static const String keyCameraQuality = 'camera_quality';
-  static const String keyFrontCameraEnabled = 'front_camera_enabled';
-  static const String keyRecordSoundEnabled = 'record_sound_enabled';
-
-  // Emergency detection settings
-  static const String keyEmergencyDetectionEnabled = 'emergency_detection_enabled';
-  static const String keyAccelerationThreshold = 'acceleration_threshold';
-  static const String keySpeedThreshold = 'speed_threshold';
-
-  // Storage settings
-  static const String keyRecordLength = 'record_length';
-  static const String keyRecordCount = 'record_count';
-  static const String keyRecordLocation = 'record_location';
-  static const String keyPhotoLocation = 'photo_location';
 
   // Methods to lock and unlock screen rotation
   static void rotationLock() {
@@ -143,21 +146,30 @@ class SettingsManager {
     String? qualityString = _prefs?.getString(keyCameraQuality);
     return resolutionPresetMap[qualityString] ?? _defaultCameraQuality;
   }
+
   static set cameraQuality(ResolutionPreset value) {
     String qualityString = resolutionPresetReverseMap[value]!;
     _prefs?.setString(keyCameraQuality, qualityString);
     _notifyListeners(keyCameraQuality);
   }
 
-  static bool get frontCameraEnabled =>
-      _prefs?.getBool(keyFrontCameraEnabled) ?? _defaultFrontCameraEnabled;
-  static set frontCameraEnabled(bool value) {
-    _prefs?.setBool(keyFrontCameraEnabled, value);
-    _notifyListeners(keyFrontCameraEnabled);
+  static List<CameraDescription> get availableCamerasList => _availableCameras;
+
+  static int get selectedCameraIndex =>
+      _prefs?.getInt(keySelectedCamera) ?? _defaultSelectedCameraIndex;
+
+  static set selectedCameraIndex(int index) {
+    if (index >= 0 && index < _availableCameras.length) {
+      _prefs?.setInt(keySelectedCamera, index);
+      _notifyListeners(keySelectedCamera);
+    }
   }
 
+  static CameraDescription get selectedCamera =>
+      _availableCameras[selectedCameraIndex];
+
   static bool get recordSoundEnabled =>
-     _prefs?.getBool(keyRecordSoundEnabled) ?? _defaultRecordSoundEnabled;
+      _prefs?.getBool(keyRecordSoundEnabled) ?? _defaultRecordSoundEnabled;
 
   static set recordSoundEnabled(bool value) {
     _prefs?.setBool(keyRecordSoundEnabled, value);
@@ -165,15 +177,18 @@ class SettingsManager {
   }
 
   static bool get emergencyDetectionEnabled =>
-      _prefs?.getBool(keyEmergencyDetectionEnabled) ?? _defaultEmergencyDetectionEnabled;
+      _prefs?.getBool(keyEmergencyDetectionEnabled) ??
+      _defaultEmergencyDetectionEnabled;
   static set emergencyDetectionEnabled(bool value) {
     _prefs?.setBool(keyEmergencyDetectionEnabled, value);
     _notifyListeners(keyEmergencyDetectionEnabled);
   }
 
   static double get accelerationThreshold =>
-      _prefs?.getDouble(keyAccelerationThreshold) ?? _defaultAccelerationThreshold;
-  static double get defaultAccelerationThreshold => _defaultAccelerationThreshold;
+      _prefs?.getDouble(keyAccelerationThreshold) ??
+      _defaultAccelerationThreshold;
+  static double get defaultAccelerationThreshold =>
+      _defaultAccelerationThreshold;
   static set accelerationThreshold(double value) {
     _prefs?.setDouble(keyAccelerationThreshold, value);
     _notifyListeners(keyAccelerationThreshold);

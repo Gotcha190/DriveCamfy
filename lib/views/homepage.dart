@@ -1,6 +1,7 @@
 import 'package:drive_camfy/utils/settings_listener.dart';
 import 'package:drive_camfy/utils/settings_manager.dart';
 import 'package:drive_camfy/widgets/interface_buttons/camera_button.dart';
+import 'package:drive_camfy/widgets/interface_buttons/camera_selection_dialog.dart';
 import 'package:drive_camfy/widgets/interface_buttons/g_sensor_button.dart';
 import 'package:drive_camfy/widgets/interface_buttons/rotation_button.dart';
 import 'package:drive_camfy/widgets/interface_buttons/settings_button.dart';
@@ -42,6 +43,15 @@ class HomePageState extends State<HomePage> {
     setState(() {
       _isCameraInitialized = isInitialized;
     });
+  }
+
+  void _showCameraSelectionDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return const CameraSelectionDialog();  // Używamy nowego widgetu
+      },
+    );
   }
 
   void _onSettingsChanged(String settingName) {
@@ -90,7 +100,7 @@ class HomePageState extends State<HomePage> {
                   Column(
                     children: [
                       CameraButton(
-                        onPressed: () {},
+                        onPressed: _showCameraSelectionDialog,
                         size: iconSize,
                       ),
                       SizedBox(height: iconSize / 4),

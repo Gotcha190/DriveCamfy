@@ -21,10 +21,8 @@ class CameraWidget extends StatefulWidget {
   }
 
   static Future<CameraController> createController() async {
-    final cameras = await availableCameras();
-    final firstCamera = cameras.first;
     CameraController controller = CameraController(
-      firstCamera,
+      SettingsManager.selectedCamera,
       SettingsManager.cameraQuality,
       enableAudio: SettingsManager.recordSoundEnabled,
       imageFormatGroup: ImageFormatGroup.yuv420,
@@ -103,6 +101,7 @@ class CameraWidgetState extends State<CameraWidget>
     switch (settingName) {
       case SettingsManager.keyRecordSoundEnabled:
       case SettingsManager.keyCameraQuality:
+      case SettingsManager.keySelectedCamera:
         widget.onControllerInitializationChanged(false);
         setState(() {
           _isControllerInitialized = false;
@@ -113,7 +112,6 @@ class CameraWidgetState extends State<CameraWidget>
       case SettingsManager.keyAccelerationThreshold:
       case SettingsManager.keySpeedThreshold:
         VideoRecorder.instance.initializeEmergencyDetection();
-
         break;
     }
     _isProcessingSettingsChange = false;

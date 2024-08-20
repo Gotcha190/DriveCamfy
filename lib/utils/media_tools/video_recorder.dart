@@ -78,6 +78,7 @@ class VideoRecorder {
       switch (settingName) {
         case SettingsManager.keyRecordSoundEnabled:
         case SettingsManager.keyCameraQuality:
+        case SettingsManager.keySelectedCamera:
           controllerStateCallback?.call(false);
           await stopRecording(
             cleanup: false,

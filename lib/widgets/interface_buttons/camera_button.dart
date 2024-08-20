@@ -14,7 +14,7 @@ class CameraButton extends StatelessWidget {
         width: size,
         height: size,
         child: IconButton(
-          icon: const Icon(Icons.camera_front),
+          icon: const Icon(Icons.camera),
           color: Colors.white,
           onPressed: onPressed,
         ),

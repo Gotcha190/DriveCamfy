@@ -13,7 +13,6 @@ class SettingsViewState extends State<SettingsView> {
   late TextEditingController _accelerationController;
   late TextEditingController _speedController;
   late bool _rotationLocked;
-  late bool _frontCameraEnabled;
   late bool _recordSoundEnabled;
   late bool _emergencyDetectionEnabled;
   late double _accelerationThreshold;
@@ -28,7 +27,6 @@ class SettingsViewState extends State<SettingsView> {
   void initState() {
     super.initState();
     _rotationLocked = SettingsManager.rotationLocked;
-    _frontCameraEnabled = SettingsManager.frontCameraEnabled;
     _recordSoundEnabled = SettingsManager.recordSoundEnabled;
     _emergencyDetectionEnabled = SettingsManager.emergencyDetectionEnabled;
     _accelerationThreshold = SettingsManager.accelerationThreshold;
@@ -52,7 +50,6 @@ class SettingsViewState extends State<SettingsView> {
         SettingsManager.rotationUnlock();
       }
       SettingsManager.cameraQuality = _cameraQuality;
-      SettingsManager.frontCameraEnabled = _frontCameraEnabled;
       SettingsManager.recordSoundEnabled = _recordSoundEnabled;
       SettingsManager.emergencyDetectionEnabled = _emergencyDetectionEnabled;
       SettingsManager.accelerationThreshold = _accelerationThreshold;
@@ -120,6 +117,30 @@ class SettingsViewState extends State<SettingsView> {
     return Column(
       children: [
         ListTile(
+          title: const Text('Select Camera'),
+          trailing: DropdownButton<int>(
+            value: SettingsManager.selectedCameraIndex,
+            onChanged: (int? newCameraIndex) {
+              setState(() {
+                if (newCameraIndex != null) {
+                  SettingsManager.selectedCameraIndex = newCameraIndex;
+                }
+              });
+            },
+            items: SettingsManager.availableCamerasList
+                .asMap()
+                .entries
+                .map<DropdownMenuItem<int>>((entry) {
+              int index = entry.key;
+              CameraDescription camera = entry.value;
+              return DropdownMenuItem<int>(
+                value: index,
+                child: Text('Camera ${camera.name} (${camera.lensDirection.toString().split('.').last})'),
+              );
+            }).toList(),
+          ),
+        ),
+        ListTile(
           title: const Text('Camera Quality'),
           trailing: DropdownButton<ResolutionPreset>(
             value: _cameraQuality,
@@ -135,17 +156,6 @@ class SettingsViewState extends State<SettingsView> {
                 child: Text(SettingsManager.resolutionPresetReverseMap[value]!),
               );
             }).toList(),
-          ),
-        ),
-        ListTile(
-          title: const Text('Front Camera'),
-          trailing: Switch(
-            value: _frontCameraEnabled,
-            onChanged: (value) {
-              setState(() {
-                _frontCameraEnabled = value;
-              });
-            },
           ),
         ),
         ListTile(
