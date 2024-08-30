@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'package:camera/camera.dart';
 import 'package:drive_camfy/utils/emergency_detection.dart';
-import 'package:sensors_plus/sensors_plus.dart';
 import 'package:drive_camfy/utils/app_directory.dart';
 import 'package:drive_camfy/utils/media_tools/gallery_helper.dart';
 import 'package:drive_camfy/utils/settings_manager.dart';
@@ -143,7 +142,6 @@ class VideoRecorder {
   }
 
   Future<void> startEmergencyRecording() async {
-    print("EMERGENCY");
     _isEmergencyRecording = true;
     _emergencyClipStart = DateTime.now();
     Duration timeDifference = _emergencyClipStart.difference(_currentClipStart);
@@ -170,7 +168,9 @@ class VideoRecorder {
         if (cleanup) await deleteOldRecordings();
         if (!shouldContinueRecording) {
           _shouldContinueRecording = false;
-          emergencyDetection.startMonitoringEmergencyBrake(false);
+          _autoEmergency
+              ? emergencyDetection.startMonitoringEmergencyBrake(false)
+              : '';
         }
       }
     } on CameraException catch (e) {
@@ -179,6 +179,7 @@ class VideoRecorder {
   }
 
   Future<void> stopEmergencyRecording() async {
+    _isEmergencyRecording = false;
     if (_controller.value.isRecordingVideo) {
       XFile tempFile = await _controller.stopVideoRecording();
       String formattedDate =

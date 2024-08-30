@@ -9,57 +9,63 @@ class EmergencyDetection {
   late StreamSubscription<AccelerometerEvent> _accelerometerListener;
   double _previousZ = 0.0; // Store previous z-axis acceleration
 
-  final double _speedThreshold = SettingsManager.speedThreshold; // Speed threshold (m/s)
+  final double _speedThreshold =
+      SettingsManager.speedThreshold; // Speed threshold (m/s)
 
-  final double _accelerationThreshold = -SettingsManager.accelerationThreshold; // Prog gwałtownego hamowania
+  final double _accelerationThreshold =
+      -SettingsManager.accelerationThreshold; // Prog gwałtownego hamowania
 
   EmergencyDetection(this.videoRecorder);
 
   // Method to start monitoring for emergency braking
   void startMonitoringEmergencyBrake(bool shouldContinueMonitoring) {
-    if (videoRecorder.controller.value.isRecordingVideo && shouldContinueMonitoring && SettingsManager.emergencyDetectionEnabled) {
+    if (videoRecorder.controller.value.isRecordingVideo &&
+        shouldContinueMonitoring &&
+        SettingsManager.emergencyDetectionEnabled) {
       // Rozpocznij nasłuchiwanie zdarzeń akcelerometru
-      _accelerometerListener = accelerometerEventStream().listen((AccelerometerEvent event) {
-
-        double deltaZ = event.z - _previousZ; // Oblicz zmianę przyspieszenia w osi Z
+      _accelerometerListener =
+          accelerometerEventStream().listen((AccelerometerEvent event) {
+        double deltaZ =
+            event.z - _previousZ; // Oblicz zmianę przyspieszenia w osi Z
         _previousZ = event.z;
-        print(_previousZ);
 
         if (deltaZ < _accelerationThreshold) {
           // Wykryto znaczne hamowanie
-          checkVehicleSpeed();
+          checkVehicleSpeed(shouldContinueMonitoring);
         }
       });
     } else {
       // Zatrzymaj nasłuchiwanie zdarzeń akcelerometru
       _accelerometerListener.cancel();
+      checkVehicleSpeed(shouldContinueMonitoring);
     }
   }
 
   // Method to check vehicle speed based on GPS data
-  void checkVehicleSpeed() async {
-    Location location = Location();
-    bool serviceEnabled = await location.serviceEnabled();
-    if (!serviceEnabled) {
-      serviceEnabled = await location.requestService();
-      if (!serviceEnabled) return;
-    }
+  void checkVehicleSpeed(bool shouldContinueMonitoring) async {
+    if (shouldContinueMonitoring) {
+      Location location = Location();
+      bool serviceEnabled = await location.serviceEnabled();
+      if (!serviceEnabled) {
+        serviceEnabled = await location.requestService();
+        if (!serviceEnabled) return;
+      }
 
-    PermissionStatus permissionGranted = await location.hasPermission();
-    if (permissionGranted == PermissionStatus.denied) {
-      permissionGranted = await location.requestPermission();
-      if (permissionGranted != PermissionStatus.granted) return;
-    }
+      PermissionStatus permissionGranted = await location.hasPermission();
+      if (permissionGranted == PermissionStatus.denied) {
+        permissionGranted = await location.requestPermission();
+        if (permissionGranted != PermissionStatus.granted) return;
+      }
 
-    // Get current vehicle speed from GPS data
-    LocationData? currentLocation = await location.getLocation();
-    double? currentSpeed = currentLocation.speed;
-    print(currentSpeed);
+      // Get current vehicle speed from GPS data
+      LocationData? currentLocation = await location.getLocation();
+      double? currentSpeed = currentLocation.speed;
 
-    // Check if vehicle speed is below the threshold
+      // Check if vehicle speed is below the threshold
 
-    if (currentSpeed != null && currentSpeed < _speedThreshold) {
-      videoRecorder.startEmergencyRecording();
+      if (currentSpeed != null && currentSpeed < _speedThreshold) {
+        videoRecorder.startEmergencyRecording();
+      }
     }
   }
 }

@@ -13,7 +13,8 @@ class VideoButton extends StatefulWidget {
 
 class _VideoButtonState extends State<VideoButton> {
   late VideoRecorder _videoRecorder;
-  late OverlayEntry _overlayEntry;
+  OverlayEntry? _overlayEntry;
+  bool _isStoppingEmergencyRecording = false;
 
   @override
   void initState() {
@@ -35,35 +36,40 @@ class _VideoButtonState extends State<VideoButton> {
         print('Camera controller not found.');
       }
     });
-    _overlayEntry = OverlayEntry(builder: (context) {
-      return const Positioned(
-        top: 40,
-        left: 0,
-        right: 0,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.warning,
-              color: Colors.red,
-            ),
-            Text(
-              "EMERGENCY",
-              style: TextStyle(
+  }
+
+  OverlayEntry _createOverlayEntry() {
+    return OverlayEntry(
+      builder: (context) {
+        return const Positioned(
+          top: 40,
+          left: 0,
+          right: 0,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.warning,
                 color: Colors.red,
-                fontWeight: FontWeight.bold,
-                fontSize: 40,
-                decoration: TextDecoration.none,
               ),
-            ),
-            Icon(
-              Icons.warning,
-              color: Colors.red,
-            ),
-          ],
-        ),
-      );
-    });
+              Text(
+                "EMERGENCY",
+                style: TextStyle(
+                  color: Colors.red,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 40,
+                  decoration: TextDecoration.none,
+                ),
+              ),
+              Icon(
+                Icons.warning,
+                color: Colors.red,
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   void _updateRecordingState() {
@@ -74,51 +80,78 @@ class _VideoButtonState extends State<VideoButton> {
 
   @override
   void dispose() {
+    _overlayEntry?.remove(); // Clean up any overlays
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    if (!_videoRecorder.controller.value.isInitialized) {
+      return const CircularProgressIndicator();
+    }
     return ElevatedButton(
-      onPressed: () async {
-        if (!_videoRecorder.controller.value.isInitialized) {
-          print('Controller is not initialized.');
-          return;
-        }
-        if (_videoRecorder.controller.value.isRecordingVideo) {
-          await _videoRecorder.stopRecording(cleanup: true, shouldContinueRecording: false);
-          if (mounted) {
-            setState(() {});
-          }
-        } else if (SettingsManager.recordLength > 0 &&
-            SettingsManager.recordCount >= 0) {
-          await _videoRecorder.recordRecursively(true);
-          if (mounted) {
-            setState(() {});
-          }
-        }
-      },
-      onLongPress: () async {
-        if (!_videoRecorder.controller.value.isInitialized) {
-          print('Controller is not initialized.');
-          return;
-        }
-        if (SettingsManager.recordLength > 0 &&
-            SettingsManager.recordCount >= 0 &&
-            !_videoRecorder.isEmergencyRecording) {
-          Overlay.of(context).insert(
-              _overlayEntry); // Add overlay when emergency recording starts
-          await _videoRecorder.startEmergencyRecording();
-          Timer(const Duration(minutes: 2), () {
-            _overlayEntry.remove();
-          });
-        }
-        if (_videoRecorder.isEmergencyRecording) {
-          _overlayEntry.remove();
-          await _videoRecorder.stopEmergencyRecording();
-          await _videoRecorder.recordRecursively(true);
-        }
-      },
+      onPressed: _isStoppingEmergencyRecording
+          ? null // Disable the button while stopping emergency recording
+          : () async {
+              if (_videoRecorder.controller.value.isRecordingVideo) {
+                await _videoRecorder.stopRecording(
+                    cleanup: true, shouldContinueRecording: false);
+                if (_videoRecorder.isEmergencyRecording &&
+                    _overlayEntry != null &&
+                    _overlayEntry!.mounted) {
+                  _isStoppingEmergencyRecording = true; // Set flag
+                  setState(() {});
+
+                  await _videoRecorder.stopEmergencyRecording();
+                  _overlayEntry!.remove();
+
+                  _isStoppingEmergencyRecording = false; // Reset flag
+                  setState(() {});
+                }
+              } else if (SettingsManager.recordLength > 0 &&
+                  SettingsManager.recordCount >= 0) {
+                await _videoRecorder.recordRecursively(true);
+              }
+              if (mounted) {
+                setState(() {});
+              }
+            },
+      onLongPress: _isStoppingEmergencyRecording
+          ? null // Disable the button while stopping emergency recording
+          : () async {
+              if (!_videoRecorder.controller.value.isRecordingVideo) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text(
+                        "Start recording first to use emergency recording"),
+                  ),
+                );
+                return; // Exit if not recording
+              }
+              if (!_videoRecorder.isEmergencyRecording) {
+                _overlayEntry = _createOverlayEntry();
+                Overlay.of(context).insert(
+                    _overlayEntry!); // Add overlay when emergency recording starts
+                await _videoRecorder.startEmergencyRecording();
+                Timer(const Duration(minutes: 2), () {
+                  if (_overlayEntry != null && _overlayEntry!.mounted) {
+                    _overlayEntry!.remove();
+                  }
+                });
+                return;
+              }
+              if (_overlayEntry != null && _overlayEntry!.mounted) {
+                _overlayEntry!.remove(); // Ensure it's removed
+              }
+
+              _isStoppingEmergencyRecording = true;
+              setState(() {});
+              await _videoRecorder.stopEmergencyRecording();
+              _isStoppingEmergencyRecording = false;
+              setState(() {});
+
+              await _videoRecorder.recordRecursively(true);
+            },
       style: ElevatedButton.styleFrom(
         shape: const CircleBorder(),
         padding: const EdgeInsets.all(30),
