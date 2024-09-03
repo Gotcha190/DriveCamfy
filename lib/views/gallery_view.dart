@@ -1,10 +1,10 @@
 import 'dart:io';
-import 'dart:typed_data';
-import 'package:drive_camfy/utils/media_tools/gallery_helper.dart';
-import 'package:drive_camfy/utils/media_tools/thumbnail_generator.dart';
+import 'package:drive_camfy/utils/media_tools/file_selection_manager.dart';
+import 'package:drive_camfy/utils/media_tools/media_options_handler.dart';
+import 'package:drive_camfy/widgets/options_popup_menu_button.dart';
 import 'package:flutter/material.dart';
-import 'package:visibility_detector/visibility_detector.dart';
-import 'package:drive_camfy/utils/media_tools/selectable_file.dart';
+import 'package:drive_camfy/utils/media_tools/gallery_helper.dart';
+import 'package:drive_camfy/widgets/gallery_media_widget.dart';
 
 class GalleryView extends StatefulWidget {
   const GalleryView({super.key});
@@ -19,99 +19,48 @@ class _GalleryViewState extends State<GalleryView>
   List<SelectableFile> selectableVideos = [];
   List<SelectableFile> selectableEmergency = [];
 
-  final ValueNotifier<Set<SelectableFile>> _selectedFilesNotifier =
-      ValueNotifier<Set<SelectableFile>>({});
-
-  final ValueNotifier<bool> _anySelectedNotifier = ValueNotifier<bool>(false);
-
+  late final FileSelectionManager _fileSelectionManager;
   late TabController _tabController;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+    _fileSelectionManager = FileSelectionManager();
     _loadFiles();
   }
 
   @override
   void dispose() {
     _tabController.dispose();
-    _selectedFilesNotifier.dispose();
-    _anySelectedNotifier.dispose();
+    _fileSelectionManager.dispose();
     super.dispose();
   }
 
   Future<void> _loadFiles() async {
-    List<File> images = await GalleryHelper.getImages();
-    List<File> videos = await GalleryHelper.getVideos();
-    List<File> emergency = await GalleryHelper.getEmergency();
-
+    final fileLists = await GalleryHelper.loadFiles();
     setState(() {
-      selectableImages = images.map((file) => SelectableFile(file)).toList();
-      selectableVideos = videos.map((file) => SelectableFile(file)).toList();
-      selectableEmergency =
-          emergency.map((file) => SelectableFile(file)).toList();
+      selectableImages = fileLists.images;
+      selectableVideos = fileLists.videos;
+      selectableEmergency = fileLists.emergency;
     });
-
-    // Update the notifier
-    _selectedFilesNotifier.value = {};
+    _fileSelectionManager.resetSelection();
   }
 
-  void _toggleFileSelection(SelectableFile file) {
-    file.toggleSelection();
-    final selectedFiles = _selectedFilesNotifier.value;
-
-    if (file.isSelectedNotifier.value) {
-      selectedFiles.add(file);
-    } else {
-      selectedFiles.remove(file);
-    }
-
-    _selectedFilesNotifier.value = Set.from(selectedFiles);
-
-    // Update _anySelectedNotifier
-    _anySelectedNotifier.value = selectedFiles.isNotEmpty;
+  void _toggleFileSelection(SelectableFile file, {bool? selectAll}) {
+    _fileSelectionManager.toggleFileSelection(file, _getCurrentFiles(),
+        selectAll: selectAll);
   }
 
-  void _toggleAllFilesSelection(List<SelectableFile> currentTabFiles) {
-    final selectedFiles = _selectedFilesNotifier.value;
-    final areAllSelected = _areAllFilesSelected(currentTabFiles);
-
-    for (var file in currentTabFiles) {
-      file.setSelection(!areAllSelected);
-    }
-
-    if (areAllSelected) {
-      selectedFiles.removeAll(currentTabFiles);
-    } else {
-      selectedFiles.addAll(currentTabFiles);
-    }
-
-    _selectedFilesNotifier.value = Set.from(selectedFiles);
-
-    // Update _anySelectedNotifier
-    _anySelectedNotifier.value = selectedFiles.isNotEmpty;
-  }
-
-  bool _areAllFilesSelected(List<SelectableFile> currentFiles) {
-    return currentFiles
-        .every((file) => _selectedFilesNotifier.value.contains(file));
+  bool get _areAllFilesSelected {
+    return _fileSelectionManager.areAllFilesSelected(_getCurrentFiles());
   }
 
   void _openFullScreen(BuildContext context, SelectableFile file) async {
     String routeName = file.file.path.endsWith('.mp4')
         ? '/fullscreenVideo'
         : '/fullscreenImage';
-
-    // Wybieramy odpowiednią listę w zależności od typu pliku
-    List<File> filesToSend;
-    if (file.file.path.endsWith('.mp4')) {
-      filesToSend = selectableVideos.map((f) => f.file).toList();
-    } else if (selectableEmergency.contains(file)) {
-      filesToSend = selectableEmergency.map((f) => f.file).toList();
-    } else {
-      filesToSend = selectableImages.map((f) => f.file).toList();
-    }
+    List<File> filesToSend = _getFilesToSend(file);
 
     int index = filesToSend.indexOf(file.file);
 
@@ -125,51 +74,43 @@ class _GalleryViewState extends State<GalleryView>
     );
   }
 
+  List<File> _getFilesToSend(SelectableFile file) {
+    // Check if the file is in the emergency list first
+    if (selectableEmergency.contains(file)) {
+      return selectableEmergency.map((f) => f.file).toList();
+    }
+    // Check if the file is a video based on its extension
+    if (file.file.path.endsWith('.mp4')) {
+      return selectableVideos.map((f) => f.file).toList();
+    }
+    // If it's neither an emergency nor a video, return image files
+    return selectableImages.map((f) => f.file).toList();
+  }
+
+  void _handleFloatingActionButtonPress() {
+    MediaOptionsHandler.handleOption(
+      'delete',
+      _fileSelectionManager.selectedFilesNotifier.value.toList(),
+      context,
+      () {},
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return ValueListenableBuilder<bool>(
-      valueListenable: _anySelectedNotifier,
+      valueListenable: _fileSelectionManager.anySelectedNotifier,
       builder: (context, anySelected, _) {
         return Scaffold(
           appBar: AppBar(
-            title: anySelected
-                ? Row(
-                    children: [
-                      ValueListenableBuilder<Set<SelectableFile>>(
-                        valueListenable: _selectedFilesNotifier,
-                        builder: (context, selectedFiles, _) {
-                          return IconButton(
-                            icon: Icon(
-                              _areAllFilesSelected(_getCurrentFiles())
-                                  ? Icons.check_circle
-                                  : Icons.radio_button_unchecked,
-                              color: _areAllFilesSelected(_getCurrentFiles())
-                                  ? Colors.blueAccent
-                                  : Colors.black,
-                            ),
-                            onPressed: () {
-                              _toggleAllFilesSelection(_getCurrentFiles());
-                            },
-                          );
-                        },
-                      ),
-                      const SizedBox(width: 8),
-                      ValueListenableBuilder<Set<SelectableFile>>(
-                        valueListenable: _selectedFilesNotifier,
-                        builder: (context, selectedFiles, _) {
-                          return Text("Selected: ${selectedFiles.length}");
-                        },
-                      ),
-                    ],
-                  )
-                : const Text('Gallery'),
+            title: _buildAppBarTitle(anySelected),
             bottom: TabBar(
               controller: _tabController,
               tabs: const [
                 Tab(text: 'Videos'),
                 Tab(
-                  child: Text('Emergency', style: TextStyle(color: Colors.red)),
-                ),
+                    child:
+                        Text('Emergency', style: TextStyle(color: Colors.red))),
                 Tab(text: 'Pictures'),
               ],
             ),
@@ -182,7 +123,44 @@ class _GalleryViewState extends State<GalleryView>
               _buildGridView(context, selectableImages),
             ],
           ),
+          floatingActionButton: anySelected
+              ? OptionsFloatingActionButton(
+                  files: _fileSelectionManager.selectedFilesNotifier.value.toList(), // Pass the list of selected files
+                  onDelete: _handleFloatingActionButtonPress,
+                )
+              : null,
         );
+      },
+    );
+  }
+
+  Widget _buildAppBarTitle(bool anySelected) {
+    return ValueListenableBuilder<Set<SelectableFile>>(
+      valueListenable: _fileSelectionManager.selectedFilesNotifier,
+      builder: (context, selectedFiles, _) {
+        if (anySelected) {
+          return Row(
+            children: [
+              IconButton(
+                icon: Icon(
+                  _areAllFilesSelected
+                      ? Icons.check_circle
+                      : Icons.radio_button_unchecked,
+                  color:
+                      _areAllFilesSelected ? Colors.blueAccent : Colors.black,
+                ),
+                onPressed: () {
+                  _toggleFileSelection(_getCurrentFiles().first,
+                      selectAll: !_areAllFilesSelected);
+                },
+              ),
+              const SizedBox(width: 8),
+              Text("Selected: ${selectedFiles.length}"),
+            ],
+          );
+        } else {
+          return const Text('Gallery');
+        }
       },
     );
   }
@@ -195,93 +173,38 @@ class _GalleryViewState extends State<GalleryView>
   }
 
   Widget _buildGridView(BuildContext context, List<SelectableFile> files) {
-    return GridView.builder(
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
-        crossAxisSpacing: 4.0,
-        mainAxisSpacing: 4.0,
-      ),
-      itemCount: files.length,
-      itemBuilder: (BuildContext context, int index) {
-        final file = files[index];
-        return GestureDetector(
-          onTap: () {
-            if (_selectedFilesNotifier.value.isNotEmpty) {
-              _toggleFileSelection(file);
-            } else {
-              _openFullScreen(context, file);
-            }
-          },
-          onLongPress: () {
-            if (_selectedFilesNotifier.value.isEmpty) {
-              _toggleFileSelection(file);
-            }
-          },
-          child: _buildMediaWidget(context, file),
-        );
-      },
-    );
-  }
-
-  Widget _buildMediaWidget(BuildContext context, SelectableFile file) {
-    return ValueListenableBuilder<bool>(
-      valueListenable: file.isSelectedNotifier,
-      builder: (context, isSelected, _) {
-        return Stack(
-          children: [
-            Positioned.fill(
-              child: file.file.path.endsWith('.mp4')
-                  ? FutureBuilder<Uint8List?>(
-                      future: ThumbnailsGenerator.generateThumbnail(file.file),
-                      builder: (context, snapshot) {
-                        if (snapshot.connectionState ==
-                            ConnectionState.waiting) {
-                          return const Center(
-                              child: CircularProgressIndicator());
-                        } else if (snapshot.hasError) {
-                          return const Icon(Icons.error);
-                        } else {
-                          return snapshot.hasData
-                              ? Image.memory(
-                                  snapshot.data!,
-                                  fit: BoxFit.cover,
-                                  width: double.infinity,
-                                  height: double.infinity,
-                                )
-                              : const SizedBox();
-                        }
-                      },
-                    )
-                  : Image.file(
-                      file.file,
-                      fit: BoxFit.cover,
-                      width: double.infinity,
-                      height: double.infinity,
-                    ),
+    return RepaintBoundary(
+      child: GridView.builder(
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 3,
+          crossAxisSpacing: 4.0,
+          mainAxisSpacing: 4.0,
+        ),
+        itemCount: files.length,
+        itemBuilder: (BuildContext context, int index) {
+          final file = files[index];
+          return RepaintBoundary(
+            child: GestureDetector(
+              onTap: () {
+                if (_fileSelectionManager
+                    .selectedFilesNotifier.value.isNotEmpty) {
+                  _toggleFileSelection(file);
+                } else {
+                  _openFullScreen(context, file);
+                }
+              },
+              onLongPress: () {
+                _toggleFileSelection(file);
+              },
+              child: buildGalleryMediaWidget(
+                context,
+                file,
+                _fileSelectionManager.selectedFilesNotifier.value,
+              ),
             ),
-            if (isSelected)
-              const Positioned(
-                top: 8,
-                left: 8,
-                child: Icon(
-                  Icons.check_circle,
-                  color: Colors.blueAccent,
-                  size: 24,
-                ),
-              ),
-            if (!isSelected && _selectedFilesNotifier.value.isNotEmpty)
-              const Positioned(
-                top: 8,
-                left: 8,
-                child: Icon(
-                  Icons.radio_button_unchecked,
-                  color: Colors.grey,
-                  size: 24,
-                ),
-              ),
-          ],
-        );
-      },
+          );
+        },
+      ),
     );
   }
 }

@@ -1,20 +1,19 @@
-import 'dart:io';
-import 'package:drive_camfy/utils/media_tools/gallery_helper.dart';
+import 'package:drive_camfy/utils/media_tools/file_selection_manager.dart';
 import 'package:flutter/material.dart';
 
 class MediaOptionsHandler {
   static void handleOption(
     String option,
-    File file,
+    List<SelectableFile> files, // Lista SelectableFile
     BuildContext context,
-    Function() onVideoDeleted,
+    Function() onFilesDeleted,
   ) {
     switch (option) {
       case 'delete':
         _delete(
-          file,
+          files, // Lista SelectableFile
           context,
-          onVideoDeleted,
+          onFilesDeleted,
         );
         break;
       // Dodaj obsługę innych opcji, jeśli potrzebujesz
@@ -24,9 +23,9 @@ class MediaOptionsHandler {
   }
 
   static void _delete(
-    File file,
+    List<SelectableFile> files, // Lista SelectableFile
     BuildContext context,
-    Function() onDelete,
+    Function() onFilesDeleted,
   ) {
     showDialog(
       context: context,
@@ -34,7 +33,7 @@ class MediaOptionsHandler {
         return AlertDialog(
           title: const Text("Delete"),
           content: Text(
-              "Are you sure you want to delete this ${file.path.endsWith('.jpg') ? 'photo' : 'video'}?"),
+              "Are you sure you want to delete the selected ${files.length > 1 ? 'files' : 'file'}?"),
           actions: [
             TextButton(
               onPressed: () {
@@ -44,14 +43,14 @@ class MediaOptionsHandler {
             ),
             TextButton(
               onPressed: () {
-                file.path.endsWith('.jpg')
-                    ? file.deleteSync()
-                    : GalleryHelper.deleteVideo(file);
+                for (var file in files) {
+                  file.file.deleteSync(); // Usuwamy File
+                }
                 Navigator.of(context).pop();
-                onDelete();
+                onFilesDeleted();
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text("File deleted"),
+                  SnackBar(
+                    content: Text("${files.length} file(s) deleted"),
                   ),
                 );
                 Navigator.pop(context);

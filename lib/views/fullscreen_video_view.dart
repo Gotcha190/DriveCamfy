@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:drive_camfy/utils/media_tools/file_selection_manager.dart';
 import 'package:drive_camfy/widgets/options_popup_menu_button.dart';
 import 'package:path/path.dart' as path;
 import 'package:flutter/material.dart';
@@ -116,7 +117,7 @@ class _FullscreenVideoViewState extends State<FullscreenVideoView> {
                     iconSize: 40,
                   ),
                   OptionsPopupMenuButton(
-                    file: widget.videos[_currentIndex],
+                    files: [SelectableFile(widget.videos[_currentIndex])],
                     onDelete: widget.onDelete,
                   ),
                 ],
