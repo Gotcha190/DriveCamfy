@@ -114,9 +114,15 @@ class _GalleryViewState extends State<GalleryView>
           body: TabBarView(
             controller: _tabController,
             children: [
-              _buildGridView(context, selectableVideos),
-              _buildGridView(context, selectableEmergency),
-              _buildGridView(context, selectableImages),
+              selectableVideos.isEmpty
+                  ? const Center(child: Text("No video recordings"))
+                  : _buildGridView(context, selectableVideos),
+              selectableEmergency.isEmpty
+                  ? const Center(child: Text("No emergency recordings"))
+                  : _buildGridView(context, selectableEmergency),
+              selectableImages.isEmpty
+                  ? const Center(child: Text("No photos"))
+                  : _buildGridView(context, selectableImages),
             ],
           ),
           floatingActionButton: anySelected
