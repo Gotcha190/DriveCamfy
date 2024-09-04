@@ -1,6 +1,7 @@
 import 'package:drive_camfy/utils/media_tools/file_manager.dart';
 import 'package:drive_camfy/utils/media_tools/file_selection_manager.dart';
 import 'package:flutter/material.dart';
+import 'package:share_plus/share_plus.dart';
 
 class MediaOptionsHandler {
   static void handleOption({
@@ -16,6 +17,9 @@ class MediaOptionsHandler {
           context,
           onFilesDeleted,
         );
+        break;
+      case 'share':
+        _share(files, context);
         break;
       //Other cases
       default:
@@ -64,5 +68,18 @@ class MediaOptionsHandler {
         );
       },
     );
+  }
+  static void _share(List<SelectableFile> files, BuildContext context) {
+    final xFiles = files.map((file) => XFile(file.file.path)).toList();
+
+    if (xFiles.isNotEmpty) {
+      Share.shareXFiles(xFiles);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("No files selected for sharing."),
+        ),
+      );
+    }
   }
 }
