@@ -1,9 +1,8 @@
-import 'dart:io';
 import 'package:camera/camera.dart';
 import 'package:drive_camfy/utils/app_directory.dart';
+import 'package:drive_camfy/utils/media_tools/file_manager.dart';
 import 'package:drive_camfy/widgets/camera_controls/concave_button.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:drive_camfy/widgets/camera_widget.dart';
 
 class PhotoButton extends StatefulWidget {
@@ -24,17 +23,10 @@ class _PhotoButtonState extends State<PhotoButton> {
       _showOverlay(context);
       await Future.delayed(const Duration(milliseconds: 500));
       _hideOverlay();
-      final String imagePath = _getImagePath();
-      final File newImage = File(image.path);
-      await newImage.copy(imagePath);
+      await FileManager.saveImage(image, DateTime.now(), AppDirectory().images);
     } catch (e) {
       print('Błąd podczas robienia i zapisywania zdjęcia: $e');
     }
-  }
-
-  String _getImagePath() {
-    final now = DateTime.now();
-    return '${AppDirectory().images}/image_${DateFormat('yyyy-MM-dd_HH-mm-ss').format(now)}.jpg';
   }
 
   void _showOverlay(BuildContext context) {
@@ -46,8 +38,7 @@ class _PhotoButtonState extends State<PhotoButton> {
               duration: const Duration(milliseconds: 400),
               opacity: 1.0,
               child: Container(
-                color:
-                    Colors.white.withOpacity(0.5),
+                color: Colors.white.withOpacity(0.5),
               ),
             ),
           ),

@@ -2,11 +2,10 @@ import 'dart:io';
 import 'package:camera/camera.dart';
 import 'package:drive_camfy/utils/emergency_detection.dart';
 import 'package:drive_camfy/utils/app_directory.dart';
-import 'package:drive_camfy/utils/media_tools/gallery_helper.dart';
+import 'package:drive_camfy/utils/media_tools/file_manager.dart';
 import 'package:drive_camfy/utils/settings_manager.dart';
 import 'package:drive_camfy/widgets/camera_widget.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 
 typedef RecordingStateCallback = void Function();
 typedef ControllerStateCallback = void Function(bool isInitialized);
@@ -158,14 +157,10 @@ class VideoRecorder {
     try {
       if (_controller.value.isRecordingVideo) {
         XFile tempFile = await _controller.stopVideoRecording();
-        String formattedDate =
-            DateFormat('yyyy-MM-dd_HH-mm-ss').format(_currentClipStart);
-        final String videoPath =
-            '${AppDirectory().videos}/video_$formattedDate.mp4';
-        await tempFile.saveTo(videoPath);
-        File(tempFile.path).delete();
+        await FileManager.saveVideo(
+            tempFile, _currentClipStart, AppDirectory().videos);
         recordingStateCallback?.call();
-        if (cleanup) await deleteOldRecordings();
+        if (cleanup) FileManager.deleteOldRecordings(_recordCount);
         if (!shouldContinueRecording) {
           _shouldContinueRecording = false;
           _autoEmergency
@@ -182,23 +177,9 @@ class VideoRecorder {
     _isEmergencyRecording = false;
     if (_controller.value.isRecordingVideo) {
       XFile tempFile = await _controller.stopVideoRecording();
-      String formattedDate =
-          DateFormat('yyyy-MM-dd_HH-mm-ss').format(_emergencyClipStart);
-      final String videoPath =
-          '${AppDirectory().emergency}/EMERGENCY_$formattedDate.mp4';
-      await tempFile.saveTo(videoPath);
+      await FileManager.saveVideo(
+          tempFile, _emergencyClipStart, AppDirectory().emergency);
       File(tempFile.path).delete();
-    }
-  }
-
-  Future<void> deleteOldRecordings() async {
-    List<File>? existingClips = await GalleryHelper.getVideos();
-    if (existingClips.length > _recordCount) {
-      existingClips
-          .sort((a, b) => a.lastModifiedSync().compareTo(b.lastModifiedSync()));
-      for (int i = 0; i < existingClips.length - _recordCount; i++) {
-        await existingClips[i].delete();
-      }
     }
   }
 

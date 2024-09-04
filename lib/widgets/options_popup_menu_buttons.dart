@@ -21,10 +21,10 @@ class OptionsMenu extends StatelessWidget {
       iconSize: iconSize,
       onSelected: (String result) {
         MediaOptionsHandler.handleOption(
-          result,
-          files,
-          context,
-          onDelete,
+          option: result,
+          files: files,
+          context: context,
+          onFilesDeleted: onDelete,
         );
       },
       itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[

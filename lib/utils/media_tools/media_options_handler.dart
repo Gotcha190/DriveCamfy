@@ -1,29 +1,30 @@
+import 'package:drive_camfy/utils/media_tools/file_manager.dart';
 import 'package:drive_camfy/utils/media_tools/file_selection_manager.dart';
 import 'package:flutter/material.dart';
 
 class MediaOptionsHandler {
-  static void handleOption(
-    String option,
-    List<SelectableFile> files, // Lista SelectableFile
-    BuildContext context,
-    Function() onFilesDeleted,
-  ) {
+  static void handleOption({
+    required String option,
+    required List<SelectableFile> files,
+    required BuildContext context,
+    required Function() onFilesDeleted,
+  }) {
     switch (option) {
       case 'delete':
         _delete(
-          files, // Lista SelectableFile
+          files,
           context,
           onFilesDeleted,
         );
         break;
-      // Dodaj obsługę innych opcji, jeśli potrzebujesz
+      //Other cases
       default:
         print('Wybrano opcję: $option');
     }
   }
 
   static void _delete(
-    List<SelectableFile> files, // Lista SelectableFile
+    List<SelectableFile> files,
     BuildContext context,
     Function() onFilesDeleted,
   ) {
@@ -42,10 +43,8 @@ class MediaOptionsHandler {
               child: const Text("Cancel", style: TextStyle(color: Colors.grey)),
             ),
             TextButton(
-              onPressed: () {
-                for (var file in files) {
-                  file.file.deleteSync(); // Usuwamy File
-                }
+              onPressed: () async {
+                await FileManager.deleteFiles(files);
                 Navigator.of(context).pop();
                 onFilesDeleted();
                 ScaffoldMessenger.of(context).showSnackBar(

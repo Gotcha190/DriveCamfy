@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'package:drive_camfy/utils/media_tools/file_selection_manager.dart';
-import 'package:drive_camfy/utils/media_tools/media_options_handler.dart';
 import 'package:drive_camfy/widgets/options_popup_menu_buttons.dart';
 import 'package:flutter/material.dart';
 import 'package:drive_camfy/utils/media_tools/gallery_helper.dart';
@@ -88,12 +87,9 @@ class _GalleryViewState extends State<GalleryView>
   }
 
   void _handleFloatingActionButtonPress() {
-    MediaOptionsHandler.handleOption(
-      'delete',
-      _fileSelectionManager.selectedFilesNotifier.value.toList(),
-      context,
-      () {},
-    );
+    setState(() {
+      _fileSelectionManager.resetSelection();
+    });
   }
 
   @override
@@ -124,9 +120,15 @@ class _GalleryViewState extends State<GalleryView>
             ],
           ),
           floatingActionButton: anySelected
-              ? OptionsFloatingActionButton(
-                  files: _fileSelectionManager.selectedFilesNotifier.value.toList(), // Pass the list of selected files
-                  onDelete: _handleFloatingActionButtonPress,
+              ? ValueListenableBuilder<Set<SelectableFile>>(
+                  valueListenable: _fileSelectionManager.selectedFilesNotifier,
+                  builder: (context, selectedFiles, _) {
+                    return OptionsFloatingActionButton(
+                      files: _fileSelectionManager.selectedFilesNotifier.value
+                          .toList(),
+                      onDelete: _handleFloatingActionButtonPress,
+                    );
+                  },
                 )
               : null,
         );

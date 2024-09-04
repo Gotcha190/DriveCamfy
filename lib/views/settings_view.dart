@@ -208,7 +208,7 @@ class SettingsViewState extends State<SettingsView> {
                 ),
               ),
               IconButton(
-                icon: Icon(Icons.restore),
+                icon: const Icon(Icons.restore),
                 onPressed: () {
                   setState(() {
                     _accelerationThreshold = SettingsManager.defaultAccelerationThreshold; // Przywróć domyślną wartość progową przyspieszenia
