@@ -51,6 +51,7 @@ dependencies:
   sensors_plus: ^5.0.1
   location: ^6.0.2
   share_plus: ^10.0.0
+  gallery_saver: ^2.3.2
 
 dev_dependencies:
   flutter_test:

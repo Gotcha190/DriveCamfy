@@ -1,6 +1,7 @@
 import 'package:drive_camfy/utils/media_tools/file_manager.dart';
 import 'package:drive_camfy/utils/media_tools/file_selection_manager.dart';
 import 'package:flutter/material.dart';
+import 'package:gallery_saver/gallery_saver.dart';
 import 'package:share_plus/share_plus.dart';
 
 class MediaOptionsHandler {
@@ -21,7 +22,9 @@ class MediaOptionsHandler {
       case 'share':
         _share(files, context);
         break;
-      //Other cases
+      case 'save':
+        _saveToGallery(files, context);
+        break;
       default:
         print('Wybrano opcję: $option');
     }
@@ -69,6 +72,7 @@ class MediaOptionsHandler {
       },
     );
   }
+
   static void _share(List<SelectableFile> files, BuildContext context) {
     final xFiles = files.map((file) => XFile(file.file.path)).toList();
 
@@ -81,5 +85,21 @@ class MediaOptionsHandler {
         ),
       );
     }
+  }
+
+  static void _saveToGallery(List<SelectableFile> files, BuildContext context) async {
+    for (var file in files) {
+      if (file.file.path.endsWith('.mp4')) {
+        await GallerySaver.saveVideo(file.file.path, albumName: 'Camera');
+      } else {
+        await GallerySaver.saveImage(file.file.path, albumName: 'Camera');
+      }
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text("${files.length} file(s) saved to gallery"),
+      ),
+    );
   }
 }

@@ -29,25 +29,34 @@ class OptionsMenu extends StatelessWidget {
       },
       itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
         const PopupMenuItem<String>(
-          value: 'option1',
-          child: Text('Option 1'),
-        ),
-        const PopupMenuItem<String>(
-          value: 'option2',
-          child: Text('Option 2'),
+          value: 'save',
+          child: Row(
+            children: [
+              Icon(Icons.save_alt),
+            ],
+          ),
         ),
         const PopupMenuItem<String>(
           value: 'share',
-          child: Text('Share'),
+          child: Row(
+            children: [
+              Icon(Icons.share),
+            ],
+          ),
         ),
         const PopupMenuItem<String>(
           value: 'delete',
-          child: Text(
-            'Delete',
-            style: TextStyle(color: Colors.red),
+          child: Row(
+            children: [
+              Icon(Icons.delete, color: Colors.red),
+            ],
           ),
         ),
       ],
+      padding: EdgeInsets.zero,
+      constraints: const BoxConstraints(
+        minWidth: 40,
+      ),
     );
   }
 }
