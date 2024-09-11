@@ -13,7 +13,7 @@ class SettingsManager {
   static const String keyRecordSoundEnabled = 'record_sound_enabled';
   static const String keyEmergencyDetectionEnabled =
       'emergency_detection_enabled';
-  static const String keyAccelerationThreshold = 'acceleration_threshold';
+  static const String keyDecelerationThreshold = 'deceleration_threshold';
   static const String keySpeedThreshold = 'speed_threshold';
   static const String keyRecordLength = 'record_length';
   static const String keyRecordCount = 'record_count';
@@ -25,7 +25,7 @@ class SettingsManager {
   static const int _defaultSelectedCameraIndex = 0;
   static const bool _defaultRecordSoundEnabled = true;
   static const bool _defaultEmergencyDetectionEnabled = true;
-  static const double _defaultAccelerationThreshold = 15.0;
+  static const double _defaultDecelerationThreshold = 15.0;
   static const double _defaultSpeedThreshold = 10.0;
   static const bool _defaultRotationLocked = false;
   static const int _defaultRecordLength = 1;
@@ -58,7 +58,7 @@ class SettingsManager {
       keyCameraQuality: _defaultCameraQuality,
       keyRecordSoundEnabled: _defaultRecordSoundEnabled,
       keyEmergencyDetectionEnabled: _defaultEmergencyDetectionEnabled,
-      keyAccelerationThreshold: _defaultAccelerationThreshold,
+      keyDecelerationThreshold: _defaultDecelerationThreshold,
       keySpeedThreshold: _defaultSpeedThreshold,
       keyRecordLength: _defaultRecordLength,
       keyRecordCount: _defaultRecordCount,
@@ -184,14 +184,14 @@ class SettingsManager {
     _notifyListeners(keyEmergencyDetectionEnabled);
   }
 
-  static double get accelerationThreshold =>
-      _prefs?.getDouble(keyAccelerationThreshold) ??
-      _defaultAccelerationThreshold;
-  static double get defaultAccelerationThreshold =>
-      _defaultAccelerationThreshold;
-  static set accelerationThreshold(double value) {
-    _prefs?.setDouble(keyAccelerationThreshold, value);
-    _notifyListeners(keyAccelerationThreshold);
+  static double get decelerationThreshold =>
+      _prefs?.getDouble(keyDecelerationThreshold) ??
+      _defaultDecelerationThreshold;
+  static double get defaultDecelerationThreshold =>
+      _defaultDecelerationThreshold;
+  static set decelerationThreshold(double value) {
+    _prefs?.setDouble(keyDecelerationThreshold, value);
+    _notifyListeners(keyDecelerationThreshold);
   }
 
   static double get speedThreshold =>

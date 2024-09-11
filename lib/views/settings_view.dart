@@ -10,12 +10,12 @@ class SettingsView extends StatefulWidget {
 }
 
 class SettingsViewState extends State<SettingsView> {
-  late TextEditingController _accelerationController;
+  late TextEditingController _decelerationController;
   late TextEditingController _speedController;
   late bool _rotationLocked;
   late bool _recordSoundEnabled;
   late bool _emergencyDetectionEnabled;
-  late double _accelerationThreshold;
+  late double _decelerationThreshold;
   late double _speedThreshold;
   late ResolutionPreset _cameraQuality;
   late int _recordLength;
@@ -29,14 +29,15 @@ class SettingsViewState extends State<SettingsView> {
     _rotationLocked = SettingsManager.rotationLocked;
     _recordSoundEnabled = SettingsManager.recordSoundEnabled;
     _emergencyDetectionEnabled = SettingsManager.emergencyDetectionEnabled;
-    _accelerationThreshold = SettingsManager.accelerationThreshold;
+    _decelerationThreshold = SettingsManager.decelerationThreshold;
     _speedThreshold = SettingsManager.speedThreshold;
     _cameraQuality = SettingsManager.cameraQuality;
     _recordLength = SettingsManager.recordLength;
     _recordCount = SettingsManager.recordCount;
     _recordLocation = SettingsManager.recordLocation;
     _photoLocation = SettingsManager.photoLocation;
-    _accelerationController = TextEditingController(text: _accelerationThreshold.toString());
+    _decelerationController =
+        TextEditingController(text: _decelerationThreshold.toString());
     _speedController = TextEditingController(text: _speedThreshold.toString());
   }
 
@@ -52,10 +53,10 @@ class SettingsViewState extends State<SettingsView> {
       SettingsManager.cameraQuality = _cameraQuality;
       SettingsManager.recordSoundEnabled = _recordSoundEnabled;
       SettingsManager.emergencyDetectionEnabled = _emergencyDetectionEnabled;
-      SettingsManager.accelerationThreshold = _accelerationThreshold;
+      SettingsManager.decelerationThreshold = _decelerationThreshold;
       SettingsManager.speedThreshold = _speedThreshold;
     });
-    _accelerationController.dispose();
+    _decelerationController.dispose();
     _speedController.dispose();
     super.dispose();
   }
@@ -135,7 +136,8 @@ class SettingsViewState extends State<SettingsView> {
               CameraDescription camera = entry.value;
               return DropdownMenuItem<int>(
                 value: index,
-                child: Text('Camera ${camera.name} (${camera.lensDirection.toString().split('.').last})'),
+                child: Text(
+                    'Camera ${camera.name} (${camera.lensDirection.toString().split('.').last})'),
               );
             }).toList(),
           ),
@@ -150,7 +152,8 @@ class SettingsViewState extends State<SettingsView> {
               });
             },
             items: ResolutionPreset.values
-                .map<DropdownMenuItem<ResolutionPreset>>((ResolutionPreset value) {
+                .map<DropdownMenuItem<ResolutionPreset>>(
+                    (ResolutionPreset value) {
               return DropdownMenuItem<ResolutionPreset>(
                 value: value,
                 child: Text(SettingsManager.resolutionPresetReverseMap[value]!),
@@ -188,21 +191,55 @@ class SettingsViewState extends State<SettingsView> {
           ),
         ),
         ListTile(
-          title: const Text('Acceleration Threshold'),
+          title: InkWell(
+            onTap: () {
+              showDialog(
+                context: context,
+                builder: (BuildContext context) {
+                  return AlertDialog(
+                    title: const Text('Deceleration Threshold'),
+                    content: const Text(
+                      'Defines the minimum value of sudden deceleration (braking), below which the system detects a potentially dangerous situation. The lower the value, the more sensitive the system is to sudden braking.',
+                    ),
+                    actions: <Widget>[
+                      TextButton(
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                        },
+                        child: const Text('OK'),
+                      ),
+                    ],
+                  );
+                },
+              );
+            },
+            child: const Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Deceleration Threshold'),
+                Icon(
+                  Icons.help,
+                  size: 12,
+                ),
+              ],
+            ),
+          ),
           trailing: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               SizedBox(
-                width: 100,
+                width: 50,
                 child: TextFormField(
-                  controller: _accelerationController, // Kontroler dla pola tekstowego
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true), // Ustaw typ klawiatury na numeryczną
+                  controller: _decelerationController,
+                  keyboardType:
+                      const TextInputType.numberWithOptions(decimal: true),
                   decoration: const InputDecoration(
-                    hintText: 'Enter acceleration threshold', // Opcjonalny tekst podpowiedzi
+                    hintText: 'Enter deceleration threshold',
                   ),
                   onChanged: (value) {
                     setState(() {
-                      _accelerationThreshold = double.tryParse(value) ?? _accelerationThreshold; // Aktualizacja wartości _accelerationThreshold
+                      _decelerationThreshold =
+                          double.tryParse(value) ?? _decelerationThreshold;
                     });
                   },
                 ),
@@ -211,8 +248,11 @@ class SettingsViewState extends State<SettingsView> {
                 icon: const Icon(Icons.restore),
                 onPressed: () {
                   setState(() {
-                    _accelerationThreshold = SettingsManager.defaultAccelerationThreshold; // Przywróć domyślną wartość progową przyspieszenia
-                    _accelerationController.text = SettingsManager.defaultAccelerationThreshold.toString(); // Ustaw wartość pola tekstowego na domyślną
+                    _decelerationThreshold = SettingsManager
+                        .defaultDecelerationThreshold; // Przywróć domyślną wartość progową przyspieszenia
+                    _decelerationController.text = SettingsManager
+                        .defaultDecelerationThreshold
+                        .toString(); // Ustaw wartość pola tekstowego na domyślną
                   });
                 },
               ),
@@ -220,21 +260,56 @@ class SettingsViewState extends State<SettingsView> {
           ),
         ),
         ListTile(
-          title: const Text('Speed Threshold'),
+          title: InkWell(
+            onTap: () {
+              showDialog(
+                context: context,
+                builder: (BuildContext context) {
+                  return AlertDialog(
+                    title: const Text('Speed Threshold'),
+                    content: const Text(
+                      'The speed limit below which the system recognizes an emergency after detecting sudden braking. If the vehicle’s speed drops below this value, the system will trigger an emergency alert.',
+                    ),
+                    actions: <Widget>[
+                      TextButton(
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                        },
+                        child: const Text('OK'),
+                      ),
+                    ],
+                  );
+                },
+              );
+            },
+            child: const Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Speed Threshold'),
+                Icon(
+                  Icons.help,
+                  size: 12,
+                ),
+              ],
+            ),
+          ),
           trailing: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               SizedBox(
-                width: 100,
+                width: 50,
                 child: TextFormField(
                   controller: _speedController, // Kontroler dla pola tekstowego
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true), // Ustaw typ klawiatury na numeryczną
+                  keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true), // Ustaw typ klawiatury na numeryczną
                   decoration: const InputDecoration(
-                    hintText: 'Enter speed threshold', // Opcjonalny tekst podpowiedzi
+                    hintText:
+                        'Enter speed threshold', // Opcjonalny tekst podpowiedzi
                   ),
                   onChanged: (value) {
                     setState(() {
-                      _speedThreshold = double.tryParse(value) ?? _speedThreshold; // Aktualizacja wartości progowej prędkości
+                      _speedThreshold = double.tryParse(value) ??
+                          _speedThreshold; // Aktualizacja wartości progowej prędkości
                     });
                   },
                 ),
@@ -243,8 +318,11 @@ class SettingsViewState extends State<SettingsView> {
                 icon: const Icon(Icons.restore),
                 onPressed: () {
                   setState(() {
-                    _speedThreshold = SettingsManager.defaultSpeedThreshold; // Przywróć domyślną wartość progową prędkości
-                    _speedController.text = SettingsManager.defaultSpeedThreshold.toString(); // Ustaw wartość pola tekstowego na domyślną
+                    _speedThreshold = SettingsManager
+                        .defaultSpeedThreshold; // Przywróć domyślną wartość progową prędkości
+                    _speedController.text = SettingsManager
+                        .defaultSpeedThreshold
+                        .toString(); // Ustaw wartość pola tekstowego na domyślną
                   });
                 },
               ),
@@ -254,7 +332,6 @@ class SettingsViewState extends State<SettingsView> {
       ],
     );
   }
-
 
   Widget _buildStorageSettings() {
     return Column(
@@ -286,7 +363,8 @@ class SettingsViewState extends State<SettingsView> {
                 _recordCount = newValue!;
               });
             },
-            items: <int>[5, 10, 15, 20, 30, 40, 50].map<DropdownMenuItem<int>>((int value) {
+            items: <int>[5, 10, 15, 20, 30, 40, 50]
+                .map<DropdownMenuItem<int>>((int value) {
               return DropdownMenuItem<int>(
                 value: value,
                 child: Text(value.toString()),

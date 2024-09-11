@@ -38,8 +38,6 @@ class FileManager {
   static Future<void> deleteFile(File file) async {
     try {
       if (await file.exists()) {
-        await file.delete();
-
         // Check if it's a video file
         if (file.path.endsWith('.mp4')) {
           // Remove the corresponding thumbnail
@@ -48,9 +46,9 @@ class FileManager {
 
           if (await thumbnailFile.exists()) {
             await thumbnailFile.delete();
-            print('Miniatura usunięta: $thumbnailPath');
           }
         }
+        await file.delete();
       }
     } catch (e) {
       print('Błąd podczas usuwania pliku: $e');
@@ -73,7 +71,7 @@ class FileManager {
 
       for (int i = 0; i < existingClips.length - recordCount; i++) {
         try {
-          await existingClips[i].delete();
+          await deleteFile(existingClips[i]);
         } catch (e) {
           print('Error deleting old recording: $e');
         }

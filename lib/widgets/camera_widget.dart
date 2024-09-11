@@ -1,4 +1,4 @@
-import 'package:drive_camfy/utils/media_tools/video_recorder.dart';
+import 'package:drive_camfy/utils/video_recorder.dart';
 import 'package:drive_camfy/utils/settings_manager.dart';
 import 'package:drive_camfy/widgets/camera_controls/camera_control_buttons_widget.dart';
 import 'package:flutter/material.dart';
@@ -109,9 +109,9 @@ class CameraWidgetState extends State<CameraWidget>
         await reinitializeCamera();
         break;
       case SettingsManager.keyEmergencyDetectionEnabled:
-      case SettingsManager.keyAccelerationThreshold:
+      case SettingsManager.keyDecelerationThreshold:
       case SettingsManager.keySpeedThreshold:
-        VideoRecorder.instance.initializeEmergencyDetection();
+        VideoRecorder.instance.reinitializeEmergencyDetection();
         break;
     }
     _isProcessingSettingsChange = false;
