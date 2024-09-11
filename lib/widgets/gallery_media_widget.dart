@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'dart:typed_data';
 import 'package:drive_camfy/utils/media_tools/thumbnail_generator.dart';
@@ -6,9 +7,11 @@ import 'package:drive_camfy/utils/media_tools/file_selection_manager.dart';
 Widget buildGalleryMediaWidget(
   BuildContext context,
   SelectableFile file,
-  Set<SelectableFile>
-      selectedFiles, // Pass the set of selected files to the widget
+  Set<SelectableFile> selectedFiles,
 ) {
+  if (!File(file.file.path).existsSync()) {
+    return const Center(child: Text("File does not exist"));
+  }
   return ValueListenableBuilder<bool>(
     valueListenable: file.isSelectedNotifier,
     builder: (context, isSelected, _) {
