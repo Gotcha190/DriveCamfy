@@ -25,6 +25,17 @@ Widget buildGalleryMediaWidget(
                       if (snapshot.connectionState == ConnectionState.waiting) {
                         return const Center(child: CircularProgressIndicator());
                       } else if (snapshot.hasError) {
+                        WidgetsBinding.instance.addPostFrameCallback((_) {
+                          Navigator.pushNamed(
+                            context,
+                            '/error',
+                            arguments: {
+                              'title': 'Błąd generowania miniaturki',
+                              'message':
+                                  'Wystąpił błąd podczas generowania miniaturki dla pliku ${file.file.path}: ${snapshot.error}',
+                            },
+                          );
+                        });
                         return const Icon(Icons.error);
                       } else {
                         return snapshot.hasData

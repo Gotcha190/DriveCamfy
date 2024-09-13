@@ -25,7 +25,15 @@ class _PhotoButtonState extends State<PhotoButton> {
       _hideOverlay();
       await FileManager.saveImage(image, DateTime.now(), AppDirectory().images);
     } catch (e) {
-      print('Błąd podczas robienia i zapisywania zdjęcia: $e');
+      if (!context.mounted) return;
+      Navigator.pushReplacementNamed(
+        context,
+        '/error',
+        arguments: {
+          'title': 'Error taking or saving photo',
+          'error': e.toString(),
+        },
+      );
     }
   }
 

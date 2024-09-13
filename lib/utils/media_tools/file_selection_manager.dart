@@ -50,7 +50,7 @@ class FileSelectionManager {
       }
     }
 
-    selectedFilesNotifier.notifyListeners();
+    selectedFilesNotifier.value = Set<SelectableFile>.from(selectedFilesNotifier.value);
     anySelectedNotifier.value = selectedFilesNotifier.value.isNotEmpty;
   }
 

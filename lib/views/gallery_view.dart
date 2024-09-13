@@ -37,13 +37,25 @@ class _GalleryViewState extends State<GalleryView>
   }
 
   Future<void> _loadFiles() async {
-    final fileLists = await GalleryHelper.loadFiles();
-    setState(() {
-      selectableImages = fileLists.images;
-      selectableVideos = fileLists.videos;
-      selectableEmergency = fileLists.emergency;
-    });
-    _fileSelectionManager.resetSelection();
+    try {
+      final fileLists = await GalleryHelper.loadFiles();
+      setState(() {
+        selectableImages = fileLists.images;
+        selectableVideos = fileLists.videos;
+        selectableEmergency = fileLists.emergency;
+      });
+      _fileSelectionManager.resetSelection();
+    } catch (e) {
+      if(!mounted)return;
+      Navigator.pushNamed(
+        context,
+        '/error',
+        arguments: {
+          'title': 'Błąd ładowania plików',
+          'message': 'Wystąpił błąd podczas ładowania plików: $e',
+        },
+      );
+    }
   }
 
   void _toggleFileSelection(SelectableFile file, {bool? selectAll}) {

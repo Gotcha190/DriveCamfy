@@ -44,8 +44,7 @@ class ThumbnailsGenerator {
 
       return thumbnail;
     } catch (e) {
-      print("ERROR: Failed to generate thumbnail: $e");
-      return null;
+      throw Exception("ERROR: Failed to generate thumbnail: $e");
     }
   }
 }

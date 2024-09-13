@@ -16,7 +16,7 @@ class GalleryHelper {
             .toList());
       }
     } catch (e) {
-      print('Błąd podczas odczytu katalogu obrazów: $e');
+      throw Exception('Błąd podczas odczytu katalogu obrazów: $e');
     }
     return images;
   }
@@ -33,7 +33,7 @@ class GalleryHelper {
             .toList());
       }
     } catch (e) {
-      print('Błąd podczas odczytu katalogu filmów: $e');
+      throw Exception('Błąd podczas odczytu katalogu filmów: $e');
     }
     return videos;
   }
@@ -50,7 +50,7 @@ class GalleryHelper {
             .toList());
       }
     } catch (e) {
-      print('Błąd podczas odczytu katalogu filmów: $e');
+      throw Exception('Błąd podczas odczytu katalogu filmów: $e');
     }
     return emergency;
   }
@@ -70,7 +70,7 @@ class GalleryHelper {
         await thumbnailFile.delete();
       }
     } catch (e) {
-      print('Błąd podczas usuwania filmu: $e');
+      throw Exception('Błąd podczas usuwania filmu: $e');
     }
   }
 

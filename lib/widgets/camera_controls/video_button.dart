@@ -37,10 +37,11 @@ class _VideoButtonState extends State<VideoButton> {
             setState(() {});
           }
         }).catchError((e) {
-          print('Error setting up video recorder: $e');
+          _handleError(e, context, 'Error setting up video recorder');
         });
       } else {
-        print('Camera controller not found.');
+        _handleError(
+            'Camera controller not found.', context, 'Initialization Error');
       }
     });
   }
@@ -54,6 +55,20 @@ class _VideoButtonState extends State<VideoButton> {
   Future<void> _waitForRecordingToStart() async {
     while (!_videoRecorder.controller.value.isRecordingVideo) {
       await Future.delayed(const Duration(milliseconds: 100));
+    }
+  }
+
+  void _handleError(dynamic error, BuildContext context, String title) {
+    final errorMessage = 'Error in $context: ${error.toString()}';
+    if (mounted) {
+      Navigator.pushReplacementNamed(
+        context,
+        '/error',
+        arguments: {
+          'title': title,
+          'error': errorMessage,
+        },
+      );
     }
   }
 
@@ -84,6 +99,8 @@ class _VideoButtonState extends State<VideoButton> {
         _videoRecorder.recordRecursively(true);
         await _waitForRecordingToStart();
       }
+    } catch (e) {
+      if (mounted) _handleError(e, context, 'Error handling button press');
     } finally {
       setState(() {
         _isProcessing = false;
@@ -117,7 +134,7 @@ class _VideoButtonState extends State<VideoButton> {
         await _waitForRecordingToStart();
       }
     } catch (e) {
-      print('Error handling long press: $e');
+      if (mounted) _handleError(e, context, 'Error handling long press');
     } finally {
       setState(() {
         _isProcessing = false;

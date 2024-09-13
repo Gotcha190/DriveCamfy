@@ -1,6 +1,8 @@
 import 'dart:io';
 import 'package:drive_camfy/utils/app_directory.dart';
+import 'package:drive_camfy/utils/permission_controller.dart';
 import 'package:drive_camfy/utils/settings_manager.dart';
+import 'package:drive_camfy/views/error_page.dart';
 import 'package:drive_camfy/views/fullscreen_image_view.dart';
 import 'package:drive_camfy/views/fullscreen_video_view.dart';
 import 'package:drive_camfy/views/gallery_view.dart';
@@ -32,6 +34,10 @@ class MyApp extends StatelessWidget {
         onGenerateRoute: (settings) {
           switch (settings.name) {
             case '/':
+              return MaterialPageRoute(
+                builder: (context) => PermissionCheckPage(),
+              );
+            case '/home':
               return MaterialPageRoute(
                 builder: (context) => const HomePage(),
               );
@@ -69,10 +75,15 @@ class MyApp extends StatelessWidget {
                   onDelete: onDelete,
                 ),
               );
+            case '/error':
             default:
-
-              ///TODO:Do PageNotFound
-              return null;
+              final arguments = settings.arguments as Map<String, dynamic>?;
+              final String title = arguments?['title'] ?? 'Unknown Error';
+              final String error =
+                  arguments?['error'] ?? 'An unknown error occurred';
+              return MaterialPageRoute(
+                  builder: (context) =>
+                      ErrorPage(title: title, message: error));
           }
         },
       );

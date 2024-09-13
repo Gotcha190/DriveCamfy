@@ -16,7 +16,7 @@ class FileManager {
       await tempFile.saveTo(imagePath);
       File(tempFile.path).delete();
     } catch (e) {
-      print('Error saving image: $e');
+      throw Exception('An error occurred while saving the image: $e');
     }
   }
 
@@ -30,7 +30,7 @@ class FileManager {
       // Optionally delete the temporary file after saving
       File(tempFile.path).delete();
     } catch (e) {
-      print('Error saving video: $e');
+      throw Exception('An error occurred while saving video: $e');
     }
   }
 
@@ -51,7 +51,7 @@ class FileManager {
         await file.delete();
       }
     } catch (e) {
-      print('Błąd podczas usuwania pliku: $e');
+      throw Exception('An error occurred while deleting file: $e');
     }
   }
 
@@ -73,7 +73,7 @@ class FileManager {
         try {
           await deleteFile(existingClips[i]);
         } catch (e) {
-          print('Error deleting old recording: $e');
+          throw Exception('An error occurred while deleting old recording: $e');
         }
       }
     }

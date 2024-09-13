@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:camera/camera.dart';
 import 'package:drive_camfy/utils/emergency_controller.dart';
 import 'package:drive_camfy/utils/emergency_detection.dart';
@@ -87,7 +86,7 @@ class VideoRecorder {
             cleanup: false,
             shouldContinueRecording: true,
           );
-          await reinitializeCamera(_context);
+          if(_context.mounted) await reinitializeCamera(_context);
           await recordRecursively(true);
           break;
         case SettingsManager.keyRecordLength:
@@ -110,7 +109,7 @@ class VideoRecorder {
           break;
       }
     } catch (e) {
-      print('Error in _onSettingsChanged: $e');
+      throw Exception('Error in Video Recorder _onSettingsChanged: $e');
     } finally {
       _isProcessingSettingsChange = false;
     }
@@ -122,8 +121,7 @@ class VideoRecorder {
     }
     if (_recordMins > 0 && _recordCount >= 0) {
       if (!_controller.value.isInitialized) {
-        print('Controller is not initialized.');
-        return;
+        throw Exception('Controller is not initialized.');
       }
       while (_shouldContinueRecording) {
         if (!_controller.value.isRecordingVideo) {
@@ -169,8 +167,8 @@ class VideoRecorder {
           if (_autoEmergency) emergencyController.deactivateMonitoring();
         }
       }
-    } on CameraException catch (e) {
-      print('Error stopping video recording: ${e.description}');
+    }catch (e) {
+      throw Exception('Error stopping video recording: $e');
     }
   }
 
@@ -191,9 +189,9 @@ class VideoRecorder {
       }
       await _controller.dispose();
       _controller = await CameraWidget.createController();
-      CameraWidget.setController(context, _controller);
+      if(context.mounted)CameraWidget.setController(context, _controller);
     } catch (e) {
-      print('Error in reinitializeCamera: ${e}');
+      throw Exception('Error in reinitializeCamera: $e');
     } finally {
       _isProcessingSettingsChange = false;
       controllerStateCallback?.call(true);

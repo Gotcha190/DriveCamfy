@@ -26,7 +26,11 @@ class MediaOptionsHandler {
         _saveToGallery(files, context);
         break;
       default:
-        print('Wybrano opcję: $option');
+        _navigateToErrorPage(
+          context,
+          'Unknown Option Selected',
+          'The selected option "$option" is not recognized.',
+        );
     }
   }
 
@@ -52,14 +56,16 @@ class MediaOptionsHandler {
             TextButton(
               onPressed: () async {
                 await FileManager.deleteFiles(files);
-                Navigator.of(context).pop();
-                onFilesDeleted();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text("${files.length} file(s) deleted"),
-                  ),
-                );
-                Navigator.pop(context);
+                if (context.mounted) {
+                  Navigator.of(context).pop();
+                  onFilesDeleted();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text("${files.length} file(s) deleted"),
+                    ),
+                  );
+                  Navigator.pop(context);
+                }
               },
               style: ButtonStyle(
                 backgroundColor: MaterialStateProperty.all<Color>(Colors.red),
@@ -87,7 +93,8 @@ class MediaOptionsHandler {
     }
   }
 
-  static void _saveToGallery(List<SelectableFile> files, BuildContext context) async {
+  static void _saveToGallery(
+      List<SelectableFile> files, BuildContext context) async {
     for (var file in files) {
       if (file.file.path.endsWith('.mp4')) {
         await GallerySaver.saveVideo(file.file.path, albumName: 'Camera');
@@ -95,11 +102,26 @@ class MediaOptionsHandler {
         await GallerySaver.saveImage(file.file.path, albumName: 'Camera');
       }
     }
-
+    if(!context.mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text("${files.length} file(s) saved to gallery"),
       ),
+    );
+  }
+
+  static void _navigateToErrorPage(
+    BuildContext context,
+    String title,
+    String error,
+  ) {
+    Navigator.pushReplacementNamed(
+      context,
+      '/error',
+      arguments: {
+        'title': title,
+        'error': error,
+      },
     );
   }
 }

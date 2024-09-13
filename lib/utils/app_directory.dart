@@ -1,7 +1,5 @@
 import 'dart:io';
-import 'package:device_info_plus/device_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:path/path.dart' as path;
 
 class AppDirectory {
@@ -25,11 +23,6 @@ class AppDirectory {
 
   Future<Directory> _getDirectory() async {
     Directory? exportDir;
-
-    if (Platform.isAndroid &&
-        (await DeviceInfoPlugin().androidInfo).version.sdkInt <= 29) {
-      await Permission.storage.request();
-    }
 
     if (Platform.isAndroid) {
       exportDir = Directory('/storage/emulated/0/Documents');
