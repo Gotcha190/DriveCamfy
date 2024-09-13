@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:drive_camfy/utils/settings_manager.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as path;
 
@@ -24,11 +25,15 @@ class AppDirectory {
   Future<Directory> _getDirectory() async {
     Directory? exportDir;
 
-    if (Platform.isAndroid) {
-      exportDir = Directory('/storage/emulated/0/Documents');
-    }
+    final storageLocation = SettingsManager.storageLocation;
 
-    exportDir ??= await getExternalStorageDirectory();
+    if (storageLocation == 'External') {
+      if (Platform.isAndroid) {
+        exportDir = Directory('/storage/emulated/0/Documents');
+      }
+
+      exportDir ??= await getExternalStorageDirectory();
+    }
 
     exportDir ??= await getApplicationDocumentsDirectory();
 

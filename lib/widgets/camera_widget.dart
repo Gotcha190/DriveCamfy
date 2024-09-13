@@ -102,6 +102,7 @@ class CameraWidgetState extends State<CameraWidget>
       case SettingsManager.keyRecordSoundEnabled:
       case SettingsManager.keyCameraQuality:
       case SettingsManager.keySelectedCamera:
+      case SettingsManager.keyStorageLocation:
         widget.onControllerInitializationChanged(false);
         setState(() {
           _isControllerInitialized = false;

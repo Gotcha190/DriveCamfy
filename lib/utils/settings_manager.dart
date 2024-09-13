@@ -17,8 +17,7 @@ class SettingsManager {
   static const String keySpeedThreshold = 'speed_threshold';
   static const String keyRecordLength = 'record_length';
   static const String keyRecordCount = 'record_count';
-  static const String keyRecordLocation = 'record_location';
-  static const String keyPhotoLocation = 'photo_location';
+  static const String keyStorageLocation = 'storage_location';
 
   // Default values
   static const ResolutionPreset _defaultCameraQuality = ResolutionPreset.max;
@@ -30,8 +29,7 @@ class SettingsManager {
   static const bool _defaultRotationLocked = false;
   static const int _defaultRecordLength = 1;
   static const int _defaultRecordCount = 5;
-  static const String _defaultRecordLocation = 'External';
-  static const String _defaultPhotoLocation = 'External';
+  static const String _defaultStorageLocation = 'Internal';
 
   // Initialization of SharedPreferences and available cameras
   static Future<void> init() async {
@@ -62,8 +60,7 @@ class SettingsManager {
       keySpeedThreshold: _defaultSpeedThreshold,
       keyRecordLength: _defaultRecordLength,
       keyRecordCount: _defaultRecordCount,
-      keyRecordLocation: _defaultRecordLocation,
-      keyPhotoLocation: _defaultPhotoLocation,
+      keyStorageLocation: _defaultStorageLocation,
     };
 
     defaultValues.forEach((key, value) {
@@ -217,17 +214,10 @@ class SettingsManager {
     _notifyListeners(keyRecordCount);
   }
 
-  static String get recordLocation =>
-      _prefs?.getString(keyRecordLocation) ?? _defaultRecordLocation;
-  static set recordLocation(String value) {
-    _prefs?.setString(keyRecordLocation, value);
-    _notifyListeners(keyRecordLocation);
-  }
-
-  static String get photoLocation =>
-      _prefs?.getString(keyPhotoLocation) ?? _defaultPhotoLocation;
-  static set photoLocation(String value) {
-    _prefs?.setString(keyPhotoLocation, value);
-    _notifyListeners(keyPhotoLocation);
+  static String get storageLocation =>
+      _prefs?.getString(keyStorageLocation) ?? _defaultStorageLocation;
+  static set storageLocation(String value) {
+    _prefs?.setString(keyStorageLocation, value);
+    _notifyListeners(keyStorageLocation);
   }
 }

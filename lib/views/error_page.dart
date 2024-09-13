@@ -37,12 +37,14 @@ class ErrorPage extends StatelessWidget {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 40),
-              ElevatedButton(
-                onPressed: () {
-                  openAppSettings();
-                },
-                child: const Text('Settings'),
-              ),
+              title == 'Permission error'
+                  ? ElevatedButton(
+                      onPressed: () {
+                        openAppSettings();
+                      },
+                      child: const Text('Settings'),
+                    )
+                  : const SizedBox(),
               ElevatedButton(
                 onPressed: () {
                   Navigator.pushReplacementNamed(context, '/');

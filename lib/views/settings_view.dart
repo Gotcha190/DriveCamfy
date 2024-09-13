@@ -1,4 +1,5 @@
 import 'package:camera/camera.dart';
+import 'package:drive_camfy/utils/app_directory.dart';
 import 'package:flutter/material.dart';
 import 'package:drive_camfy/utils/settings_manager.dart';
 
@@ -20,8 +21,7 @@ class SettingsViewState extends State<SettingsView> {
   late ResolutionPreset _cameraQuality;
   late int _recordLength;
   late int _recordCount;
-  late String _recordLocation;
-  late String _photoLocation;
+  late String _storageLocation;
 
   @override
   void initState() {
@@ -34,8 +34,7 @@ class SettingsViewState extends State<SettingsView> {
     _cameraQuality = SettingsManager.cameraQuality;
     _recordLength = SettingsManager.recordLength;
     _recordCount = SettingsManager.recordCount;
-    _recordLocation = SettingsManager.recordLocation;
-    _photoLocation = SettingsManager.photoLocation;
+    _storageLocation = SettingsManager.storageLocation;
     _decelerationController =
         TextEditingController(text: _decelerationThreshold.toString());
     _speedController = TextEditingController(text: _speedThreshold.toString());
@@ -59,6 +58,22 @@ class SettingsViewState extends State<SettingsView> {
     _decelerationController.dispose();
     _speedController.dispose();
     super.dispose();
+  }
+
+  Future<void> _updateStorageLocation(String newLocation) async {
+    SettingsManager.storageLocation = newLocation;
+
+    final appDirectory = AppDirectory();
+    await appDirectory.init();
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content:
+              Text('The storage location has been changed to: $newLocation.'),
+        ),
+      );
+    }
   }
 
   @override
@@ -373,31 +388,16 @@ class SettingsViewState extends State<SettingsView> {
           ),
         ),
         ListTile(
-          title: const Text('Record Location'),
+          title: const Text('Storage Location'),
           trailing: DropdownButton<String>(
-            value: _recordLocation,
-            onChanged: (String? newValue) {
-              setState(() {
-                _recordLocation = newValue!;
-              });
-            },
-            items: <String>['Internal', 'External']
-                .map<DropdownMenuItem<String>>((String value) {
-              return DropdownMenuItem<String>(
-                value: value,
-                child: Text(value),
-              );
-            }).toList(),
-          ),
-        ),
-        ListTile(
-          title: const Text('Photo Location'),
-          trailing: DropdownButton<String>(
-            value: _photoLocation,
-            onChanged: (String? newValue) {
-              setState(() {
-                _photoLocation = newValue!;
-              });
+            value: _storageLocation,
+            onChanged: (String? newValue) async {
+              if (newValue != null && newValue != _storageLocation) {
+                setState(() {
+                  _storageLocation = newValue;
+                });
+                await _updateStorageLocation(newValue);
+              }
             },
             items: <String>['Internal', 'External']
                 .map<DropdownMenuItem<String>>((String value) {

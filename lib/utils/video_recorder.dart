@@ -107,6 +107,10 @@ class VideoRecorder {
         case SettingsManager.keySpeedThreshold:
           reinitializeEmergencyDetection();
           break;
+        case SettingsManager.keyStorageLocation:
+          controllerStateCallback?.call(false);
+          if(_context.mounted) await reinitializeCamera(_context);
+          break;
       }
     } catch (e) {
       throw Exception('Error in Video Recorder _onSettingsChanged: $e');
